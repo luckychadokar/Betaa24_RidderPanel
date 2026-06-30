@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block page_title %}Training - {{ rider.name }}{% endblock %}
+{% block content %}
+<div class="card" style="max-width:600px;">
+  <div class="card-title" style="margin-bottom:16px;">Update Training - {{ rider.name }}</div>
+  <form method="post">{% csrf_token %}
+    <div class="form-row">
+      <div class="fg"><label>Status</label>
+        <select name="status">
+          <option value="pending" {% if form.status.value == 'pending' %}selected{% endif %}>Pending</option>
+          <option value="completed" {% if form.status.value == 'completed' %}selected{% endif %}>Completed</option>
+          <option value="rejected" {% if form.status.value == 'rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+      </div>
+      <div class="fg"><label>Training Date</label><input type="date" name="training_date" value="{{ form.training_date.value|default:'' }}"></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Reason (if not done)</label>
+        <select name="reason">
+          <option value="">-- Select --</option>
+          <option value="not_interested">Not Interested</option>
+          <option value="not_reachable">Phone Not Reachable</option>
+          <option value="docs_missing">Documents Missing</option>
+          <option value="failed_verification">Failed Verification</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Detail</label><textarea name="reason_detail" rows="2">{{ form.reason_detail.value|default:'' }}</textarea></div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button type="submit" class="btn btn-y">Save</button>
+      <a href="{% url 'rider_detail' rider.pk %}" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

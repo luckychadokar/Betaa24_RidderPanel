@@ -1,0 +1,161 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beta24 {% block title %}{% endblock %}</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--y:#FFD700;--yb:rgba(255,215,0,0.12);--bg:#0A0A0A;--bg2:#111;--card:#181818;--card2:#202020;--b:rgba(255,255,255,0.07);--by:rgba(255,215,0,0.22);--t:#F0F0F0;--t2:#909090;--t3:#505050;--ok:#22C55E;--warn:#F59E0B;--err:#EF4444;--info:#60A5FA;--ok-b:rgba(34,197,94,.1);--warn-b:rgba(245,158,11,.1);--err-b:rgba(239,68,68,.1);--info-b:rgba(96,165,250,.1);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;display:flex;}
+a{color:var(--y);text-decoration:none;}
+.sb{width:220px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--b);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;}
+.sb-logo{padding:14px 16px;border-bottom:1px solid var(--b);}
+.sb-logo img{width:120px;height:auto;}
+.sb-nav{flex:1;padding:8px 0;overflow-y:auto;}
+.sb-sec{font-size:9.5px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;padding:12px 16px 4px;font-weight:700;}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;color:var(--t2);position:relative;transition:all .15s;}
+.sb-item:hover{color:var(--t);background:rgba(255,255,255,.03);}
+.sb-item.active,.sb-item.active a{color:var(--y);font-weight:600;}
+.sb-item.active{background:var(--yb);}
+.sb-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--y);border-radius:0 2px 2px 0;}
+.sb-item i{width:16px;text-align:center;}
+.sb-item a{color:inherit;display:flex;align-items:center;gap:10px;width:100%;}
+.sb-foot{padding:12px 16px;border-top:1px solid var(--b);display:flex;align-items:center;gap:9px;}
+.sb-av{width:30px;height:30px;background:var(--y);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#000;}
+.main{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column;}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--b);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-l{font-size:15px;font-weight:800;}
+.topbar-sub{font-size:11px;color:var(--t3);}
+.topbar-r{display:flex;align-items:center;gap:10px;}
+.content{padding:20px 24px;flex:1;}
+.card{background:var(--card);border:1px solid var(--b);border-radius:12px;padding:18px 20px;margin-bottom:18px;}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.card-title{font-size:13.5px;font-weight:700;}
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:18px;}
+.sc{background:var(--card);border:1px solid var(--b);border-radius:11px;padding:14px 16px;position:relative;}
+.sc.hl{border-color:var(--by);}
+.sc.hl::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--y);border-radius:11px 11px 0 0;}
+.sc-label{font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.sc-val{font-size:20px;font-weight:800;}
+.sc-val.y{color:var(--y);}.sc-val.g{color:var(--ok);}.sc-val.w{color:var(--warn);}.sc-val.r{color:var(--err);}.sc-val.b{color:var(--info);}
+.sc-sub{font-size:10px;color:var(--t3);margin-top:4px;}
+.sc-icon{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.ic-y{background:var(--yb);color:var(--y);}.ic-g{background:var(--ok-b);color:var(--ok);}.ic-w{background:var(--warn-b);color:var(--warn);}.ic-r{background:var(--err-b);color:var(--err);}.ic-b{background:var(--info-b);color:var(--info);}
+.btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:7px 14px;border-radius:7px;border:none;cursor:pointer;font-weight:600;transition:all .15s;text-decoration:none;}
+.btn-y{background:var(--y);color:#000;}.btn-y:hover{background:#ffe033;color:#000;}
+.btn-ghost{background:var(--card2);border:1px solid var(--b);color:var(--t2);}.btn-ghost:hover{color:var(--t);}
+.btn-g{background:var(--ok-b);color:var(--ok);border:1px solid rgba(34,197,94,.2);}
+.btn-r{background:var(--err-b);color:var(--err);border:1px solid rgba(239,68,68,.2);}
+.btn-sm{font-size:11px;padding:5px 10px;}
+.tbl-wrap{background:var(--card);border:1px solid var(--b);border-radius:12px;overflow:hidden;margin-bottom:18px;}
+.tbl-hd{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b);}
+table{width:100%;border-collapse:collapse;}
+th{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;padding:10px 16px;text-align:left;background:rgba(0,0,0,.3);border-bottom:1px solid var(--b);}
+td{padding:10px 16px;font-size:13px;border-bottom:1px solid var(--b);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.015);}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;}
+.b-g{background:var(--ok-b);color:var(--ok);}.b-w{background:var(--warn-b);color:var(--warn);}.b-r{background:var(--err-b);color:var(--err);}.b-y{background:var(--yb);color:var(--y);}.b-b{background:var(--info-b);color:var(--info);}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.fg label{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;}
+.fg input,.fg select,.fg textarea{background:var(--card);border:1px solid var(--b);border-radius:8px;padding:9px 12px;color:var(--t);font-size:13px;outline:none;width:100%;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--y);}
+.fg select option{background:var(--card2);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-row.full{grid-template-columns:1fr;}
+.alert{padding:10px 16px;border-radius:8px;font-size:13px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.alert-ok{background:var(--ok-b);color:var(--ok);border:1px solid rgba(34,197,94,.2);}
+.alert-err{background:var(--err-b);color:var(--err);border:1px solid rgba(239,68,68,.2);}
+.alert-w{background:var(--warn-b);color:var(--warn);}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+.filter-row input,.filter-row select{background:var(--card);border:1px solid var(--b);border-radius:7px;padding:7px 11px;color:var(--t);font-size:12.5px;outline:none;}
+.rav{width:30px;height:30px;border-radius:50%;background:var(--yb);color:var(--y);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;}
+.rav-lg{width:48px;height:48px;font-size:16px;}
+.text-y{color:var(--y);}.text-g{color:var(--ok);}.text-r{color:var(--err);}.fw7{font-weight:700;}
+.two-col{display:grid;grid-template-columns:1fr 320px;gap:16px;margin-bottom:18px;}
+.gap-col{display:flex;flex-direction:column;gap:14px;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--b);border-radius:10px;}
+</style>
+</head>
+<body>
+<aside class="sb">
+  <div class="sb-logo">
+    <img src="{% static 'img/logo.png' %}" alt="Beta24" onerror="this.style.display='none'">
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">Main</div>
+    <div class="sb-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+      <a href="{% url 'dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
+    </div>
+    <div class="sb-item {% if 'rider' in request.resolver_match.url_name|default:'' %}active{% endif %}">
+      <a href="{% url 'rider_list' %}"><i class="fa-solid fa-person-biking"></i> Riders</a>
+    </div>
+    <div class="sb-item {% if 'task' in request.resolver_match.url_name|default:'' %}active{% endif %}">
+      <a href="{% url 'task_list' %}"><i class="fa-solid fa-box"></i> Tasks</a>
+    </div>
+    <div class="sb-sec">Riders Status</div>
+    <div class="sb-item">
+      <div class="sb-item">
+      <a href="{% url 'training_records' %}"><i class="fa-solid fa-clipboard-list"></i> Training Records</a>
+    </div>
+    </div>
+    <div class="sb-item">
+      <a href="{% url 'rider_list' %}?status=documents_pending"><i class="fa-solid fa-file-circle-exclamation"></i> Documents Pending</a>
+    </div>
+    <div class="sb-sec">Finance</div>
+    <div class="sb-item {% if 'payout' in request.resolver_match.url_name|default:'' %}active{% endif %}">
+      <a href="{% url 'payout_list' %}"><i class="fa-solid fa-money-bill-transfer"></i> Payouts</a>
+    </div>
+    <div class="sb-sec">Reports</div>
+    <div class="sb-item">
+      <a href="{% url 'cancelled_tasks' %}"><i class="fa-solid fa-ban"></i> Cancelled Tasks</a>
+    </div>
+    <div class="sb-item">
+      <a href="{% url 'excel_import' %}"><i class="fa-solid fa-file-import"></i> Import Excel</a>
+    </div>
+    <div class="sb-item">
+      <a href="{% url 'excel_export' %}"><i class="fa-solid fa-file-export"></i> Export Riders</a>
+    </div>
+    <div class="sb-sec">System</div>
+    <div class="sb-item">
+      <a href="/admin/"><i class="fa-solid fa-shield-halved"></i> Django Admin</a>
+    </div>
+    <div class="sb-item">
+      <a href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+  </nav>
+  <div class="sb-foot">
+    <div class="sb-av">{{ request.user.username|first|upper }}</div>
+    <div>
+      <div style="font-size:12px;font-weight:700;">{{ request.user.username }}</div>
+      <div style="font-size:10px;color:var(--t2);">Admin</div>
+    </div>
+  </div>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-l">{% block page_title %}Dashboard{% endblock %}</div>
+      <div class="topbar-sub">Beta24 › {% block breadcrumb %}{% endblock %}</div>
+    </div>
+    <div class="topbar-r">
+      <span style="font-size:11px;color:var(--t2);background:var(--card);border:1px solid var(--b);padding:5px 11px;border-radius:6px;">Beta24 Admin</span>
+    </div>
+  </div>
+  <div class="content">
+    {% if messages %}{% for msg in messages %}
+    <div class="alert {% if msg.tags == 'success' %}alert-ok{% else %}alert-err{% endif %}">
+      <i class="fa-solid fa-circle-info"></i> {{ msg }}
+    </div>
+    {% endfor %}{% endif %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card" style="max-width:700px;">
+  <div class="card-title" style="margin-bottom:4px;">{{ title }}</div>
+  <div style="font-size:12px;color:var(--t2);margin-bottom:16px;">Base: 1 task, 10 min, 2 KM = Rs.24.50 | Extra: Rs.12.5/task, Rs.0.5/min, Rs.5/km</div>
+  <form method="post">{% csrf_token %}
+    <div class="form-row">
+      <div class="fg"><label>Rider</label>
+        <select name="rider">{% for r in form.rider.field.queryset %}<option value="{{ r.pk }}" {% if form.rider.value|stringformat:"s" == r.pk|stringformat:"s" %}selected{% endif %}>{{ r.name }}</option>{% endfor %}</select>
+      </div>
+      <div class="fg"><label>Task Date</label><input type="date" name="task_date" value="{{ form.task_date.value|default:'' }}"></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Task Type</label>
+        <select name="task_type">
+          <option value="delivery">Delivery</option>
+          <option value="pickup">Pickup</option>
+          <option value="pickup_delivery">Pickup & Delivery</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Status</label>
+        <select name="status">
+          <option value="pending">Pending</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Number of Tasks</label><input type="number" name="num_tasks" id="num_tasks" value="{{ form.num_tasks.value|default:1 }}" min="1" oninput="calc()"></div>
+      <div class="fg"><label>Time Taken (minutes)</label><input type="number" name="time_taken" id="time_taken" value="{{ form.time_taken.value|default:10 }}" min="1" oninput="calc()"></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Distance (KM)</label><input type="number" name="distance_km" id="distance_km" value="{{ form.distance_km.value|default:2 }}" step="0.1" min="0" oninput="calc()"></div>
+      <div class="fg"><label>Estimated Earnings</label>
+        <div style="background:linear-gradient(135deg,#151200,#1a1800);border:1px solid var(--by);border-radius:8px;padding:10px 13px;font-size:22px;font-weight:800;color:var(--y);" id="ep">Rs.24.50</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Customer Name</label><input type="text" name="customer_name" value="{{ form.customer_name.value|default:'' }}"></div>
+      <div class="fg"><label>Customer Phone</label><input type="text" name="customer_number" value="{{ form.customer_number.value|default:'' }}"></div>
+    </div>
+    <div class="fg"><label>Pickup Address</label><textarea name="pickup_address" rows="2">{{ form.pickup_address.value|default:'' }}</textarea></div>
+    <div class="fg"><label>Drop Address</label><textarea name="drop_address" rows="2">{{ form.drop_address.value|default:'' }}</textarea></div>
+    <div class="fg"><label>Remarks</label><textarea name="remarks" rows="2">{{ form.remarks.value|default:'' }}</textarea></div>
+    <div class="fg"><label>Cancelled By</label>
+      <select name="cancelled_by"><option value="">--</option><option value="rider">Rider</option><option value="customer">Customer</option><option value="company">Company</option></select>
+    </div>
+    <div class="fg"><label>Cancellation Reason</label><textarea name="cancellation_reason" rows="2">{{ form.cancellation_reason.value|default:'' }}</textarea></div>
+    <div style="display:flex;gap:10px;"><button type="submit" class="btn btn-y"><i class="fa-solid fa-check"></i> Save Task</button><a href="{% url 'task_list' %}" class="btn btn-ghost">Cancel</a></div>
+  </form>
+</div>
+<script>
+function calc(){
+  const n=parseInt(document.getElementById('num_tasks').value)||1;
+  const t=parseInt(document.getElementById('time_taken').value)||0;
+  const d=parseFloat(document.getElementById('distance_km').value)||0;
+  let a=24.50;
+  if(n>1)a+=(n-1)*12.5;
+  if(t>10)a+=(t-10)*0.5;
+  if(d>2)a+=(d-2)*5;
+  document.getElementById('ep').textContent='Rs.'+a.toFixed(2);
+}
+calc();
+</script>
+{% endblock %}

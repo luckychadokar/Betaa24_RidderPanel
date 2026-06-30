@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block page_title %}Bank Details - {{ rider.name }}{% endblock %}
+{% block content %}
+<div class="card" style="max-width:680px;">
+  <div class="card-title" style="margin-bottom:16px;"><i class="fa-solid fa-building-columns" style="color:var(--y);margin-right:7px;"></i>Bank Details - {{ rider.name }}</div>
+
+  {% if form.errors %}
+  <div class="alert alert-err">
+    {% for field, errs in form.errors.items %}<div>{{ field }}: {{ errs|join:", " }}</div>{% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" id="bankForm">{% csrf_token %}
+    <div class="fg"><label>Account Holder Name</label><input type="text" name="account_holder_name" value="{{ form.account_holder_name.value|default:'' }}"></div>
+
+    <div class="form-row">
+      <div class="fg"><label>Account Number</label><input type="text" name="account_number" id="acc1" value="{{ form.account_number.value|default:'' }}"></div>
+      <div class="fg"><label>Re-enter Account Number</label><input type="text" name="account_number_confirm" id="acc2" value="{{ form.account_number_confirm.value|default:'' }}"></div>
+    </div>
+    <div id="accMismatch" style="display:none;color:var(--err);font-size:12px;margin:-8px 0 12px;">⚠ Account numbers do not match</div>
+
+    <div class="form-row">
+      <div class="fg">
+        <label>IFSC Code</label>
+        <input type="text" name="ifsc_code" id="ifsc" value="{{ form.ifsc_code.value|default:'' }}" style="text-transform:uppercase;" maxlength="11" placeholder="e.g. SBIN0001234">
+        <span id="ifscStatus" style="font-size:11px;color:var(--t2);margin-top:3px;display:block;"></span>
+      </div>
+      <div class="fg"><label>Account Type</label>
+        <select name="account_type">
+          <option value="savings" {% if form.account_type.value == 'savings' %}selected{% endif %}>Savings</option>
+          <option value="current" {% if form.account_type.value == 'current' %}selected{% endif %}>Current</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="fg"><label>Bank Name</label><input type="text" name="bank_name" id="bankName" value="{{ form.bank_name.value|default:'' }}" placeholder="Auto-filled or enter manually"></div>
+      <div class="fg"><label>Branch Name</label><input type="text" name="branch_name" id="branchName" value="{{ form.branch_name.value|default:'' }}" placeholder="Auto-filled or enter manually"></div>
+    </div>
+
+    <div class="fg"><label>Passbook / Cancelled Cheque Photo</label><input type="file" name="passbook_image" accept="image/*"></div>
+
+    <div class="fg"><label>Verification Status</label>
+      <select name="verify_status">
+        <option value="pending">Pending</option>
+        <option value="verified">Verified</option>
+        <option value="mismatch">Mismatch</option>
+      </select>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:10px;">
+      <button type="submit" class="btn btn-y"><i class="fa-solid fa-check"></i> Save Bank Details</button>
+      <a href="{% url 'rider_detail' rider.pk %}" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+// Account number match check
+function checkMatch(){
+  const a1 = document.getElementById('acc1').value;
+  const a2 = document.getElementById('acc2').value;
+  const mismatchEl = document.getElementById('accMismatch');
+  if(a2 && a1 !== a2){
+    mismatchEl.style.display = 'block';
+  } else {
+    mismatchEl.style.display = 'none';
+  }
+}
+document.getElementById('acc1').addEventListener('input', checkMatch);
+document.getElementById('acc2').addEventListener('input', checkMatch);
+
+// IFSC auto-fetch
+const ifscInput = document.getElementById('ifsc');
+const ifscStatus = document.getElementById('ifscStatus');
+let ifscTimeout;
+
+ifscInput.addEventListener('input', function(){
+  this.value = this.value.toUpperCase();
+  clearTimeout(ifscTimeout);
+  const code = this.value.trim();
+  if(code.length === 11){
+    ifscStatus.textContent = 'Looking up...';
+    ifscStatus.style.color = 'var(--t2)';
+    ifscTimeout = setTimeout(()=>{
+      fetch(`{% url 'ifsc_lookup' %}?ifsc=${code}`)
+        .then(r => r.json())
+        .then(data => {
+          if(data.error){
+            ifscStatus.textContent = '⚠ ' + data.error + ' — please fill bank details manually';
+            ifscStatus.style.color = 'var(--warn)';
+          } else {
+            document.getElementById('bankName').value = data.bank_name || '';
+            document.getElementById('branchName').value = data.branch_name || '';
+            ifscStatus.textContent = '✓ Bank details auto-filled';
+            ifscStatus.style.color = 'var(--ok)';
+          }
+        })
+        .catch(()=>{
+          ifscStatus.textContent = '⚠ Could not verify — please fill manually';
+          ifscStatus.style.color = 'var(--warn)';
+        });
+    }, 400);
+  } else {
+    ifscStatus.textContent = '';
+  }
+});
+</script>
+{% endblock %}

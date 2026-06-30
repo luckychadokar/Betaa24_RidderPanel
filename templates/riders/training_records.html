@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block page_title %}Training Records{% endblock %}
+{% block content %}
+<div class="filter-row">
+  <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%;">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search name / mobile / location...">
+    <button type="submit" class="btn btn-ghost">Search</button>
+    <a href="{% url 'training_records' %}" class="btn btn-ghost">Clear</a>
+    <a href="{% url 'training_import' %}" class="btn btn-y" style="margin-left:auto;"><i class="fa-solid fa-file-import"></i> Import Training Data</a>
+  </form>
+</div>
+<div class="tbl-wrap">
+  <div class="tbl-hd"><div class="card-title"><i class="fa-solid fa-graduation-cap" style="color:var(--y);margin-right:7px;"></i>Training Records ({{ records.count }})</div></div>
+  <table>
+    <thead><tr><th>Date</th><th>Name</th><th>Mobile</th><th>Alt. Number</th><th>Location</th><th>State</th><th>City</th><th>Done By</th><th>Remark</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for r in records %}
+    <tr>
+      <td>{{ r.training_date|default:"-" }}</td>
+      <td><a href="{% url 'rider_detail' r.rider.pk %}" class="text-y fw7">{{ r.rider.name }}</a></td>
+      <td style="color:var(--t2);">{{ r.rider.mobile }}</td>
+      <td style="color:var(--t2);">{{ r.alternate_number|default:"-" }}</td>
+      <td>{{ r.location|default:"-" }}</td>
+      <td>{{ r.state|default:"-" }}</td>
+      <td>{{ r.city|default:"-" }}</td>
+      <td style="color:var(--t2);">{{ r.training_done_by|default:"-" }}</td>
+      <td style="color:var(--t2);font-size:12px;">{{ r.final_remark|default:"-" }}</td>
+      <td><span class="badge {% if r.status == 'completed' %}b-g{% elif r.status == 'rejected' %}b-r{% else %}b-w{% endif %}">{{ r.get_status_display }}</span></td>
+    </tr>
+    {% empty %}<tr><td colspan="10" style="text-align:center;color:var(--t2);padding:24px;">No training records yet. <a href="{% url 'training_import' %}">Import data</a></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

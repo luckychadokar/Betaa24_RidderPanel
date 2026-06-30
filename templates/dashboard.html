@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}| Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}Overview{% endblock %}
+{% block content %}
+<div class="sg">
+  <div class="sc hl"><div class="sc-icon ic-y"><i class="fa-solid fa-person-biking"></i></div><div class="sc-label">Total Riders</div><div class="sc-val y">{{ total_riders }}</div></div>
+  <div class="sc"><div class="sc-icon ic-g"><i class="fa-solid fa-circle-check"></i></div><div class="sc-label">Active Riders</div><div class="sc-val g">{{ active_riders }}</div></div>
+  <div class="sc"><div class="sc-icon ic-w"><i class="fa-solid fa-graduation-cap"></i></div><div class="sc-label">Training Pending</div><div class="sc-val w">{{ training_pending }}</div></div>
+  <div class="sc"><div class="sc-icon ic-r"><i class="fa-solid fa-file-circle-exclamation"></i></div><div class="sc-label">Docs Pending</div><div class="sc-val r">{{ docs_pending }}</div></div>
+  <div class="sc"><div class="sc-icon ic-b"><i class="fa-solid fa-list-check"></i></div><div class="sc-label">Total Tasks</div><div class="sc-val b">{{ total_tasks }}</div></div>
+  <div class="sc"><div class="sc-icon ic-y"><i class="fa-solid fa-calendar-day"></i></div><div class="sc-label">Today Tasks</div><div class="sc-val y">{{ today_tasks }}</div></div>
+  <div class="sc hl"><div class="sc-icon ic-y"><i class="fa-solid fa-indian-rupee-sign"></i></div><div class="sc-label">Today Earnings</div><div class="sc-val y">&#8377;{{ today_earnings }}</div></div>
+  <div class="sc"><div class="sc-icon ic-r"><i class="fa-solid fa-hourglass"></i></div><div class="sc-label">Pending Payout</div><div class="sc-val r">&#8377;{{ pending_payout }}</div></div>
+</div>
+<div class="two-col">
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-title"><i class="fa-solid fa-chart-area" style="color:var(--y);margin-right:7px;"></i>Weekly Revenue</div>
+      <a href="{% url 'task_list' %}" class="btn btn-ghost btn-sm">All Tasks</a>
+    </div>
+    <canvas id="revenueChart" height="160"></canvas>
+  </div>
+  <div class="gap-col">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-hd" style="margin-bottom:10px;">
+        <div class="card-title"><i class="fa-solid fa-trophy" style="color:var(--y);margin-right:7px;"></i>Top Riders</div>
+        <a href="{% url 'rider_list' %}" class="btn btn-ghost btn-sm">All</a>
+      </div>
+      {% for r in top_riders %}
+      <div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--b);">
+        <div class="rav">{{ r.name|first }}</div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:600;">{{ r.name }}</div><div style="font-size:11px;color:var(--t2);">{{ r.total_tasks }} tasks</div></div>
+        <div class="text-g fw7">&#8377;{{ r.total_earnings }}</div>
+      </div>
+      {% empty %}<div style="color:var(--t2);font-size:13px;padding:8px 0;">No active riders yet. <a href="{% url 'rider_add' %}">Add one</a></div>
+      {% endfor %}
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title" style="margin-bottom:10px;"><i class="fa-solid fa-chart-bar" style="color:var(--y);margin-right:7px;"></i>Daily Tasks</div>
+      <canvas id="tasksChart" height="100"></canvas>
+    </div>
+  </div>
+</div>
+<div class="tbl-wrap">
+  <div class="tbl-hd">
+    <div class="card-title"><i class="fa-solid fa-box" style="color:var(--y);margin-right:7px;"></i>Recent Tasks</div>
+    <div style="display:flex;gap:8px;">
+      <a href="{% url 'task_add' %}" class="btn btn-y btn-sm"><i class="fa-solid fa-plus"></i> Add Task</a>
+      <a href="{% url 'task_list' %}" class="btn btn-ghost btn-sm">View All</a>
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>Task ID</th><th>Rider</th><th>Customer</th><th>Date</th><th>Earnings</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for t in recent_tasks %}
+    <tr>
+      <td class="text-y fw7">{{ t.task_id }}</td>
+      <td>{{ t.rider.name|default:"-" }}</td>
+      <td>{{ t.customer_name|default:"-" }}</td>
+      <td>{{ t.task_date }}</td>
+      <td class="text-g fw7">{% if t.earnings %}&#8377;{{ t.earnings }}{% else %}-{% endif %}</td>
+      <td><span class="badge {% if t.status == 'completed' %}b-g{% elif t.status == 'cancelled' %}b-r{% else %}b-w{% endif %}">{{ t.status|title }}</span></td>
+      <td><a href="{% url 'task_detail' t.pk %}" class="btn btn-ghost btn-sm">View</a></td>
+    </tr>
+    {% empty %}<tr><td colspan="7" style="text-align:center;color:var(--t2);padding:20px;">No tasks yet. <a href="{% url 'task_add' %}">Add first task</a></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+<script>
+const labels = {{ chart_labels|safe }};
+const earnings = {{ chart_earnings|safe }};
+const taskCounts = {{ chart_tasks|safe }};
+const gc = 'rgba(255,255,255,0.04)';
+new Chart(document.getElementById('revenueChart'),{type:'line',data:{labels,datasets:[{label:'Revenue',data:earnings,borderColor:'#FFD700',backgroundColor:'rgba(255,215,0,0.07)',borderWidth:2.5,pointBackgroundColor:'#FFD700',pointRadius:4,fill:true,tension:0.4}]},options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:gc},ticks:{color:'#888',callback:v=>'Rs.'+v}},x:{grid:{display:false},ticks:{color:'#888'}}},responsive:true,maintainAspectRatio:true}});
+new Chart(document.getElementById('tasksChart'),{type:'bar',data:{labels,datasets:[{label:'Tasks',data:taskCounts,backgroundColor:'rgba(255,215,0,0.65)',borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:gc},ticks:{color:'#888'}},x:{grid:{display:false},ticks:{color:'#888'}}},responsive:true,maintainAspectRatio:true}});
+</script>
+{% endblock %}

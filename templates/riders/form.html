@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumb %}Riders › {{ title }}{% endblock %}
+{% block content %}
+<div class="card" style="max-width:680px;">
+  {% if form.errors %}
+  <div class="alert alert-err" style="margin-bottom:16px;">
+    <div style="font-weight:700;margin-bottom:6px;"><i class="fa-solid fa-triangle-exclamation"></i> Please fix these errors:</div>
+    {% for field, errs in form.errors.items %}
+      <div>• <strong>{{ field }}</strong>: {{ errs|join:", " }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    <div class="form-row">
+      <div class="fg"><label>Beta24 App ID</label><input type="text" name="beta_code" value="{{ form.beta_code.value|default:'' }}" placeholder="BETA-734051"></div>
+      <div class="fg"></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Full Name *</label><input type="text" name="name" value="{{ form.name.value|default:'' }}" required></div>
+      <div class="fg"><label>Mobile *</label><input type="text" name="mobile" value="{{ form.mobile.value|default:'' }}" required></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Email</label><input type="email" name="email" value="{{ form.email.value|default:'' }}"></div>
+      <div class="fg"><label>Vehicle Type</label>
+        <select name="vehicle_type">
+          <option value="Bike" {% if form.vehicle_type.value == 'Bike' %}selected{% endif %}>Bike</option>
+          <option value="Scooter" {% if form.vehicle_type.value == 'Scooter' %}selected{% endif %}>Scooter</option>
+          <option value="Bicycle" {% if form.vehicle_type.value == 'Bicycle' %}selected{% endif %}>Bicycle</option>
+          <option value="E-Bike" {% if form.vehicle_type.value == 'E-Bike' %}selected{% endif %}>E-Bike</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fg">
+        <label>State</label>
+        <select name="state" id="stateSelect" onchange="updateCities()">
+          <option value="">-- Select State --</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>City</label>
+        <select id="citySelect" onchange="handleCityChange()">
+          <option value="">-- Select State First --</option>
+        </select>
+        <input type="text" name="city" id="cityManual" placeholder="Type city name" style="display:none;margin-top:8px;">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Status</label>
+        <select name="status">
+          <option value="new" {% if form.status.value == 'new' %}selected{% endif %}>New</option>
+          <option value="training_pending" {% if form.status.value == 'training_pending' %}selected{% endif %}>Training Pending</option>
+          <option value="documents_pending" {% if form.status.value == 'documents_pending' %}selected{% endif %}>Documents Pending</option>
+          <option value="ready" {% if form.status.value == 'ready' %}selected{% endif %}>Ready for Activation</option>
+          <option value="active" {% if form.status.value == 'active' %}selected{% endif %}>Active</option>
+          <option value="inactive" {% if form.status.value == 'inactive' %}selected{% endif %}>Inactive</option>
+        </select>
+      </div>
+      <div class="fg"><label>Joining Date</label><input type="date" name="joining_date" value="{{ form.joining_date.value|default:'' }}"></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Emergency Contact</label><input type="text" name="emergency_contact" value="{{ form.emergency_contact.value|default:'' }}"></div>
+      <div class="fg"></div>
+    </div>
+    <div class="fg"><label>Current Address (Manual Entry)</label><textarea name="address" rows="3" placeholder="Full current address...">{{ form.address.value|default:'' }}</textarea></div>
+    <div class="fg"><label>Profile Photo</label><input type="file" name="profile_photo" accept="image/*"></div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button type="submit" class="btn btn-y"><i class="fa-solid fa-check"></i> Save Rider</button>
+      <a href="{% url 'rider_list' %}" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+const statesData = {
+  "Madhya Pradesh": ["Indore","Bhopal","Jabalpur","Gwalior","Ujjain","Sagar","Satna","Rewa","Vidisha",
+    "Dewas","Ratlam","Khargone","Khandwa","Burhanpur","Chhindwara","Hoshangabad","Itarsi","Sehore",
+    "Betul","Shahdol","Mandsaur","Neemuch","Singrauli","Shivpuri","Damoh","Tikamgarh","Chhatarpur",
+    "Panna","Katni","Raisen","Vidisha","Ashoknagar","Guna","Datia","Bhind","Morena","Sheopur",
+    "Anuppur","Balaghat","Seoni","Mandla","Dindori","Umaria","Harda","Narsinghpur","Sidhi",
+    "Khilchipur","Mhow","Pithampur","Sanawad","Barwani","Alirajpur","Dhar","Jhabua","Rajgarh",
+    "Maihar","Nagda","Sendhwa","Manawar","Kasrawad","Pandhurna","Multai","Amla","Itarsi",
+    "Khurai","Bina","Garoth","Jaora","Sailana","Petlawad","Thandla","Manasa","Jawad",
+    "Sausar","Lakhnadon","Gadarwara","Sohagpur","Beohari","Waidhan","Niwari","Prithvipur","Buxwaha"
+  ],
+  "Andhra Pradesh": ["Visakhapatnam","Vijayawada","Guntur","Nellore","Kurnool","Tirupati","Kakinada",
+    "Rajahmundry","Anantapur","Kadapa","Chittoor","Eluru","Ongole","Machilipatnam","Tenali","Proddatur",
+    "Hindupur","Bhimavaram","Madanapalle","Guntakal","Tadepalligudem","Chilakaluripet"],
+  "Arunachal Pradesh": ["Itanagar","Naharlagun","Pasighat","Tawang","Ziro","Bomdila","Tezu","Along"],
+  "Assam": ["Guwahati","Silchar","Dibrugarh","Jorhat","Nagaon","Tezpur","Tinsukia","Bongaigaon",
+    "Karimganj","Sivasagar","Goalpara","Barpeta","North Lakhimpur","Dhubri","Diphu","Golaghat"],
+  "Bihar": ["Patna","Gaya","Bhagalpur","Muzaffarpur","Darbhanga","Purnia","Arrah","Begusarai",
+    "Katihar","Munger","Chhapra","Saharsa","Hajipur","Sasaram","Dehri","Siwan","Motihari","Bettiah",
+    "Bagaha","Kishanganj","Buxar","Jamalpur","Madhubani","Samastipur"],
+  "Chhattisgarh": ["Raipur","Bhilai","Bilaspur","Korba","Durg","Rajnandgaon","Jagdalpur","Raigarh",
+    "Ambikapur","Mahasamund","Dhamtari","Chirmiri","Janjgir","Kanker","Kawardha","Bhatapara"],
+  "Goa": ["Panaji","Margao","Vasco da Gama","Mapusa","Ponda","Bicholim","Curchorem","Sanguem"],
+  "Gujarat": ["Ahmedabad","Surat","Vadodara","Rajkot","Bhavnagar","Jamnagar","Gandhinagar","Junagadh",
+    "Anand","Navsari","Morbi","Mehsana","Bharuch","Vapi","Veraval","Porbandar","Godhra","Patan",
+    "Kalol","Botad","Dahod","Palanpur","Surendranagar","Amreli"],
+  "Haryana": ["Gurugram","Faridabad","Panipat","Ambala","Hisar","Karnal","Rohtak","Sonipat",
+    "Yamunanagar","Panchkula","Bhiwani","Sirsa","Bahadurgarh","Jind","Kaithal","Rewari","Kurukshetra",
+    "Palwal","Fatehabad","Pehowa"],
+  "Himachal Pradesh": ["Shimla","Manali","Dharamshala","Solan","Mandi","Kullu","Hamirpur","Una",
+    "Nahan","Bilaspur","Chamba","Kangra","Kasauli","Palampur","Sundernagar"],
+  "Jharkhand": ["Ranchi","Jamshedpur","Dhanbad","Bokaro","Hazaribagh","Deoghar","Giridih","Ramgarh",
+    "Phusro","Medininagar","Chirkunda","Chaibasa","Gumla","Dumka","Godda"],
+  "Karnataka": ["Bengaluru","Mysuru","Hubballi","Mangaluru","Belagavi","Davanagere","Ballari",
+    "Shivamogga","Tumakuru","Raichur","Bidar","Hospet","Gadag","Udupi","Kolar","Mandya","Chitradurga",
+    "Hassan","Gulbarga","Bagalkot","Bijapur","Chikkamagaluru"],
+  "Kerala": ["Thiruvananthapuram","Kochi","Kozhikode","Thrissur","Kollam","Kannur","Alappuzha",
+    "Palakkad","Malappuram","Kottayam","Kasaragod","Pathanamthitta","Idukki","Wayanad","Ernakulam"],
+  "Maharashtra": ["Mumbai","Pune","Nagpur","Nashik","Aurangabad","Solapur","Thane","Kolhapur",
+    "Amravati","Nanded","Sangli","Akola","Latur","Ahmednagar","Chandrapur","Jalgaon","Dhule",
+    "Satara","Wardha","Yavatmal","Ratnagiri","Beed","Osmanabad","Parbhani","Bhandara","Gondia",
+    "Buldhana","Washim","Hingoli","Nandurbar","Raigad","Karad","Malegaon","Ichalkaranji","Panvel"],
+  "Manipur": ["Imphal","Thoubal","Bishnupur","Churachandpur","Ukhrul","Senapati","Kakching"],
+  "Meghalaya": ["Shillong","Tura","Jowai","Nongpoh","Williamnagar","Baghmara"],
+  "Mizoram": ["Aizawl","Lunglei","Champhai","Serchhip","Kolasib","Saiha","Lawngtlai"],
+  "Nagaland": ["Kohima","Dimapur","Mokokchung","Tuensang","Wokha","Zunheboto","Mon"],
+  "Odisha": ["Bhubaneswar","Cuttack","Rourkela","Berhampur","Sambalpur","Puri","Balasore","Bhadrak",
+    "Baripada","Jharsuguda","Jeypore","Rayagada","Bargarh","Dhenkanal","Kendrapara","Angul"],
+  "Punjab": ["Ludhiana","Amritsar","Jalandhar","Patiala","Mohali","Bathinda","Hoshiarpur","Moga",
+    "Pathankot","Firozpur","Phagwara","Kapurthala","Faridkot","Sangrur","Barnala","Abohar","Khanna",
+    "Malerkotla","Rajpura","Gurdaspur"],
+  "Rajasthan": ["Jaipur","Jodhpur","Udaipur","Kota","Ajmer","Bikaner","Alwar","Bhilwara","Sikar",
+    "Pali","Bharatpur","Sri Ganganagar","Chittorgarh","Tonk","Nagaur","Hanumangarh","Jhunjhunu",
+    "Banswara","Dausa","Churu","Barmer","Jaisalmer","Sawai Madhopur","Dholpur","Karauli","Beawar",
+    "Jhalawar","Pratapgarh","Rajsamand","Bundi","Baran","Sirohi","Dungarpur"],
+  "Sikkim": ["Gangtok","Namchi","Geyzing","Mangan","Rangpo","Singtam"],
+  "Tamil Nadu": ["Chennai","Coimbatore","Madurai","Tiruchirappalli","Salem","Tirunelveli","Vellore",
+    "Erode","Thoothukudi","Dindigul","Thanjavur","Kanchipuram","Tiruppur","Karur","Cuddalore",
+    "Nagercoil","Hosur","Sivakasi","Pollachi","Rajapalayam","Pudukkottai","Namakkal","Theni"],
+  "Telangana": ["Hyderabad","Warangal","Nizamabad","Karimnagar","Khammam","Mahbubnagar","Ramagundam",
+    "Siddipet","Adilabad","Suryapet","Miryalaguda","Nalgonda","Sangareddy","Jagtial","Medak","Kothagudem"],
+  "Tripura": ["Agartala","Udaipur","Dharmanagar","Kailashahar","Belonia","Khowai","Ambassa"],
+  "Uttar Pradesh": ["Lucknow","Kanpur","Agra","Varanasi","Meerut","Allahabad","Noida","Ghaziabad",
+    "Bareilly","Aligarh","Moradabad","Saharanpur","Gorakhpur","Faizabad","Jhansi","Muzaffarnagar",
+    "Mathura","Rampur","Shahjahanpur","Farrukhabad","Mau","Hapur","Etawah","Mirzapur","Bulandshahr",
+    "Sambhal","Amroha","Hardoi","Fatehpur","Raebareli","Orai","Sitapur","Bahraich","Modinagar",
+    "Unnao","Jaunpur","Lakhimpur","Hathras","Banda","Pilibhit","Barabanki","Khurja","Gonda",
+    "Mainpuri","Lalitpur","Etah","Deoria","Ujhani","Ghazipur","Sultanpur","Azamgarh","Bijnor",
+    "Sahaswan","Basti","Chandausi","Akbarpur","Ballia","Tanda","Greater Noida"],
+  "Uttarakhand": ["Dehradun","Haridwar","Nainital","Roorkee","Haldwani","Rudrapur","Kashipur",
+    "Rishikesh","Pithoragarh","Almora","Ramnagar","Mussoorie","Pauri","Tehri","Srinagar","Kotdwar"],
+  "West Bengal": ["Kolkata","Howrah","Durgapur","Asansol","Siliguri","Bardhaman","Malda","Baharampur",
+    "Habra","Kharagpur","Shantipur","Dankuni","Dhulian","Ranaghat","Haldia","Krishnanagar","Nabadwip",
+    "Medinipur","Jalpaiguri","Balurghat","Basirhat","Bankura","Chakdaha","Darjeeling","Alipurduar","Purulia"],
+  "Delhi": ["New Delhi","Dwarka","Rohini","Saket","Karol Bagh","Pitampura","Lajpat Nagar",
+    "Janakpuri","Vasant Kunj","Connaught Place","Mayur Vihar","Shahdara","Najafgarh","Tilak Nagar"]
+};
+const currentState = "{{ form.state.value|default:'' }}";
+const currentCity = "{{ form.city.value|default:'' }}";
+
+function populateStates(){
+  const stateSelect = document.getElementById('stateSelect');
+  for(const state in statesData){
+    const opt = document.createElement('option');
+    opt.value = state;
+    opt.textContent = state;
+    if(state === currentState) opt.selected = true;
+    stateSelect.appendChild(opt);
+  }
+  updateCities();
+}
+
+function updateCities(){
+  const state = document.getElementById('stateSelect').value;
+  const citySelect = document.getElementById('citySelect');
+  citySelect.innerHTML = '';
+  if(!state){
+    citySelect.innerHTML = '<option value="">-- Select State First --</option>';
+    return;
+  }
+  const cities = statesData[state] || [];
+  const defaultOpt = document.createElement('option');
+  defaultOpt.value = '';
+  defaultOpt.textContent = '-- Select City --';
+  citySelect.appendChild(defaultOpt);
+  cities.forEach(city=>{
+    const opt = document.createElement('option');
+    opt.value = city;
+    opt.textContent = city;
+    if(city === currentCity) opt.selected = true;
+    citySelect.appendChild(opt);
+  });
+  const otherOpt = document.createElement('option');
+  otherOpt.value = '__other__';
+  otherOpt.textContent = '✏ Other (Type manually)';
+  citySelect.appendChild(otherOpt);
+
+  if(currentCity && !cities.includes(currentCity)){
+    otherOpt.selected = true;
+    document.getElementById('cityManual').style.display = 'block';
+    document.getElementById('cityManual').value = currentCity;
+  }
+  handleCityChange();
+}
+
+function handleCityChange(){
+  const citySelect = document.getElementById('citySelect');
+  const manualInput = document.getElementById('cityManual');
+  if(citySelect.value === '__other__'){
+    manualInput.style.display = 'block';
+    manualInput.required = true;
+  } else {
+    manualInput.style.display = 'none';
+    manualInput.required = false;
+    manualInput.value = citySelect.value;
+  }
+}
+populateStates();
+</script>
+{% endblock %}

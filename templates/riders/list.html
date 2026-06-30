@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block page_title %}Rider Management{% endblock %}
+{% block breadcrumb %}Riders{% endblock %}
+{% block content %}
+<div class="filter-row">
+  <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%;">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search name / mobile...">
+    <select name="status">
+      <option value="">All Status</option>
+      <option value="new" {% if status == 'new' %}selected{% endif %}>New</option>
+      <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+      <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+      <option value="training_pending" {% if status == 'training_pending' %}selected{% endif %}>Training Pending</option>
+      <option value="documents_pending" {% if status == 'documents_pending' %}selected{% endif %}>Docs Pending</option>
+    </select>
+    <button type="submit" class="btn btn-ghost">Filter</button>
+    <a href="{% url 'rider_list' %}" class="btn btn-ghost">Clear</a>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <a href="{% url 'excel_import' %}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-file-import" style="color:var(--ok);"></i> Import</a>
+      <a href="{% url 'excel_export' %}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-file-excel" style="color:var(--ok);"></i> Export</a>
+      <a href="{% url 'rider_add' %}" class="btn btn-y"><i class="fa-solid fa-plus"></i> Add Rider</a>
+    </div>
+  </form>
+</div>
+<div class="tbl-wrap">
+  <div class="tbl-hd"><div class="card-title"><i class="fa-solid fa-person-biking" style="color:var(--y);margin-right:7px;"></i>Riders ({{ riders.count }})</div></div>
+  <table>
+    <thead><tr><th>Name</th><th>Beta ID</th><th>Mobile</th><th>City</th><th>Joining Date</th><th>Tasks</th><th>Earnings</th><th>Pending</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>
+    {% for r in riders %}
+    <tr>
+      <td><div style="display:flex;align-items:center;gap:9px;"><div class="rav">{{ r.name|first }}</div><span style="font-weight:600;">{{ r.name }}</span></div></td>
+<td class="text-y fw7">{{ r.beta_code|default:"-" }}</td>
+<td style="color:var(--t2);">{{ r.mobile }}</td>
+<td>{{ r.city }}</td>
+<td style="color:var(--t2);">{{ r.joining_date }}</td>
+<td>{{ r.total_tasks }}</td>
+      <td class="text-g fw7">&#8377;{{ r.total_earnings }}</td>
+      <td class="{% if r.pending_amount > 0 %}text-r{% else %}text-g{% endif %} fw7">&#8377;{{ r.pending_amount }}</td>
+      <td><span class="badge {% if r.status == 'active' %}b-g{% elif r.status == 'inactive' %}b-r{% elif r.status == 'new' %}b-b{% else %}b-w{% endif %}">{{ r.get_status_display }}</span></td>
+      <td style="display:flex;gap:5px;">
+        <a href="{% url 'rider_detail' r.pk %}" class="btn btn-ghost btn-sm">Profile</a>
+        <a href="{% url 'rider_edit' r.pk %}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-pen"></i></a>
+      </td>
+    </tr>
+    {% empty %}<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--t2);">No riders. <a href="{% url 'rider_add' %}">Add first rider</a></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

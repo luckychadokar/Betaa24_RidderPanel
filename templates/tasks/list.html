@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block page_title %}Task Management{% endblock %}
+{% block breadcrumb %}Tasks{% endblock %}
+{% block content %}
+<div class="filter-row">
+  <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%;">
+    <input type="text" name="q" value="{{ q }}" placeholder="Task ID / customer / rider...">
+    <select name="status">
+      <option value="">All Status</option>
+      <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+      <option value="completed" {% if status == 'completed' %}selected{% endif %}>Completed</option>
+      <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+    </select>
+    <input type="date" name="from" value="{{ request.GET.from }}">
+    <input type="date" name="to" value="{{ request.GET.to }}">
+    <button type="submit" class="btn btn-ghost">Filter</button>
+    <a href="{% url 'task_list' %}" class="btn btn-ghost">Clear</a>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <a href="{% url 'task_export' %}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-file-excel" style="color:var(--ok);"></i> Export</a>
+      <a href="{% url 'task_add' %}" class="btn btn-y"><i class="fa-solid fa-plus"></i> Add Task</a>
+    </div>
+  </form>
+</div>
+<div class="tbl-wrap">
+  <div class="tbl-hd"><div class="card-title"><i class="fa-solid fa-box" style="color:var(--y);margin-right:7px;"></i>Tasks ({{ tasks.count }})</div></div>
+  <table>
+    <thead><tr><th>Task ID</th><th>Rider</th><th>Customer</th><th>Date</th><th>Tasks</th><th>Time</th><th>KM</th><th>Earnings</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for t in tasks %}
+    <tr>
+      <td class="text-y fw7">{{ t.task_id }}</td>
+      <td>{{ t.rider.name|default:"-" }}</td>
+      <td>{{ t.customer_name|default:"-" }}</td>
+      <td>{{ t.task_date }}</td>
+      <td>{{ t.num_tasks }}</td>
+      <td>{{ t.time_taken }}m</td>
+      <td>{{ t.distance_km }}km</td>
+      <td class="text-g fw7">{% if t.earnings %}&#8377;{{ t.earnings }}{% else %}-{% endif %}</td>
+      <td><span class="badge {% if t.status == 'completed' %}b-g{% elif t.status == 'cancelled' %}b-r{% elif t.status == 'in_progress' %}b-b{% else %}b-w{% endif %}">{{ t.status|title }}</span></td>
+      <td style="display:flex;gap:5px;">
+        <a href="{% url 'task_detail' t.pk %}" class="btn btn-ghost btn-sm">View</a>
+        <a href="{% url 'task_edit' t.pk %}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-pen"></i></a>
+      </td>
+    </tr>
+    {% empty %}<tr><td colspan="10" style="text-align:center;color:var(--t2);padding:24px;">No tasks. <a href="{% url 'task_add' %}">Add first task</a></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block page_title %}{{ rider.name }}{% endblock %}
+{% block breadcrumb %}Riders › Profile{% endblock %}
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:18px;">
+  <div class="card">
+    <div style="font-size:11px;color:var(--y);font-weight:700;margin-top:3px;">{{ rider.beta_code|default:"No App ID" }}</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div class="rav rav-lg">{{ rider.name|first }}</div>
+      <div><div style="font-size:16px;font-weight:800;">{{ rider.name }}</div><div style="font-size:12px;color:var(--t2);">{{ rider.mobile }}</div></div>
+    </div>
+    <div class="fg" style="margin-bottom:0;">
+      {% for l,v in rows %}
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--b);font-size:13px;"><span style="color:var(--t2);">{{ l }}</span><span style="font-weight:600;">{{ v }}</span></div>
+      {% endfor %}
+    </div>
+  <div class="fg" style="margin-bottom:0;">
+      {% for l,v in rows %}
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--b);font-size:13px;"><span style="color:var(--t2);">{{ l }}</span><span style="font-weight:600;">{{ v }}</span></div>
+      {% endfor %}
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--b);font-size:13px;"><span style="color:var(--t2);">State</span><span>{{ rider.state }}</span></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <a href="{% url 'rider_edit' rider.pk %}" class="btn btn-y btn-sm">Edit</a>
+      <a href="{% url 'rider_delete' rider.pk %}" class="btn btn-r btn-sm">Delete</a>
+    </div>
+  </div>
+  <div class="card">
+    <div style="background:linear-gradient(135deg,#151200,#1a1800);border:1px solid var(--by);border-radius:10px;padding:16px;margin-bottom:14px;">
+      <div style="font-size:10px;color:var(--t2);text-transform:uppercase;">Wallet Balance</div>
+      <div style="font-size:28px;font-weight:800;color:var(--y);">&#8377;{{ rider.wallet_balance }}</div>
+    </div>
+    {% for l,v,cls in wallet_rows %}
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--b);font-size:13px;">
+      <span style="color:var(--t2);">{{ l }}</span><span class="{{ cls }} fw7">&#8377;{{ v }}</span>
+    </div>
+    {% endfor %}
+    <a href="{% url 'rider_payout_summary' rider.pk %}" class="btn btn-y" style="width:100%;justify-content:center;margin-top:14px;">Payout History</a>
+    <a href="{% url 'payout_add' %}" class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px;">Add Payout</a>
+    <a href="{% url 'auto_calculate_payout' rider.pk %}" class="btn btn-y" style="width:100%;justify-content:center;margin-top:8px;"><i class="fa-solid fa-calculator"></i> Auto-Calculate Weekly Payout</a>
+  </div>
+  <div class="card">
+    <div style="margin-bottom:14px;">
+      <div class="card-title" style="margin-bottom:10px;"><i class="fa-solid fa-graduation-cap" style="color:var(--y);margin-right:6px;"></i>Training</div>
+      {% if training %}
+        <span class="badge {% if training.status == 'completed' %}b-g{% elif training.status == 'rejected' %}b-r{% else %}b-w{% endif %}">{{ training.get_status_display }}</span>
+        {% if training.reason %}<div style="font-size:12px;color:var(--t2);margin-top:6px;">{{ training.get_reason_display }}</div>{% endif %}
+      {% else %}<span style="color:var(--t2);font-size:13px;">Not set</span>{% endif %}
+      <br><a href="{% url 'training_update' rider.pk %}" class="btn btn-ghost btn-sm" style="margin-top:10px;">Update Training</a>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--b);margin:12px 0;">
+    <div>
+      <div class="card-title" style="margin-bottom:10px;"><i class="fa-solid fa-file-shield" style="color:var(--y);margin-right:6px;"></i>Documents</div>
+      {% if docs %}
+        {% for l,s in doc_status %}
+        <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;border-bottom:1px solid var(--b);">
+          <span style="color:var(--t2);">{{ l }}</span>
+          <span class="badge {% if s == 'approved' %}b-g{% elif s == 'rejected' %}b-r{% elif s == 'uploaded' %}b-b{% else %}b-w{% endif %}">{{ s|title }}</span>
+        </div>
+        {% endfor %}
+      {% else %}<span style="color:var(--t2);font-size:13px;">No documents</span>{% endif %}
+      <br><a href="{% url 'document_update' rider.pk %}" class="btn btn-ghost btn-sm" style="margin-top:10px;">Upload Docs</a>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--b);margin:12px 0;">
+    <div>
+      <div class="card-title" style="margin-bottom:10px;"><i class="fa-solid fa-building-columns" style="color:var(--y);margin-right:6px;"></i>Bank Details</div>
+      {% if rider.bank_detail %}
+        <div style="font-size:12px;color:var(--t2);">{{ rider.bank_detail.bank_name|default:"Not set" }}</div>
+        <div style="font-size:12px;color:var(--t2);">A/C: ****{{ rider.bank_detail.account_number|slice:"-4:" }}</div>
+        <span class="badge {% if rider.bank_detail.verify_status == 'verified' %}b-g{% elif rider.bank_detail.verify_status == 'mismatch' %}b-r{% else %}b-w{% endif %}">{{ rider.bank_detail.verify_status|title }}</span>
+      {% else %}<span style="color:var(--t2);font-size:13px;">Not added</span>{% endif %}
+      <br><a href="{% url 'bank_detail_update' rider.pk %}" class="btn btn-ghost btn-sm" style="margin-top:10px;">Update Bank Details</a>
+    </div>
+  </div>
+</div>
+<div class="tbl-wrap">
+  <div class="tbl-hd"><div class="card-title"><i class="fa-solid fa-box" style="color:var(--y);margin-right:7px;"></i>Recent Tasks</div></div>
+  <table>
+    <thead><tr><th>Task ID</th><th>Date</th><th>Type</th><th>Earnings</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for t in tasks %}
+    <tr>
+      <td class="text-y fw7">{{ t.task_id }}</td><td>{{ t.task_date }}</td><td>{{ t.get_task_type_display }}</td>
+      <td class="text-g fw7">{% if t.earnings %}&#8377;{{ t.earnings }}{% else %}-{% endif %}</td>
+      <td><span class="badge {% if t.status == 'completed' %}b-g{% elif t.status == 'cancelled' %}b-r{% else %}b-w{% endif %}">{{ t.status|title }}</span></td>
+      <td><a href="{% url 'task_detail' t.pk %}" class="btn btn-ghost btn-sm">View</a></td>
+    </tr>
+    {% empty %}<tr><td colspan="6" style="text-align:center;color:var(--t2);padding:18px;">No tasks yet</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

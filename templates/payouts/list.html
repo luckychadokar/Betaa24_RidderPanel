@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block page_title %}Payouts{% endblock %}
+{% block content %}
+<div class="sg" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px;">
+  <div class="sc hl"><div class="sc-label">Total Paid</div><div class="sc-val g">&#8377;{{ total_paid }}</div></div>
+  <div class="sc"><div class="sc-label">Pending</div><div class="sc-val r">&#8377;{{ total_pending }}</div></div>
+  <div class="sc"><div class="sc-label">Total Records</div><div class="sc-val y">{{ payouts.count }}</div></div>
+</div>
+<div style="display:flex;gap:8px;margin-bottom:14px;justify-content:flex-end;">
+  <a href="{% url 'payout_export' %}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-file-excel" style="color:var(--ok);"></i> Export</a>
+  <a href="{% url 'payout_add' %}" class="btn btn-y"><i class="fa-solid fa-plus"></i> Add Payout</a>
+</div>
+<div class="tbl-wrap">
+  <table><thead><tr><th>Rider</th><th>Amount</th><th>Status</th><th>Date</th><th>Week</th><th>Note</th><th>Action</th></tr></thead>
+  <tbody>{% for p in payouts %}
+  <tr>
+    <td><div style="display:flex;align-items:center;gap:8px;"><div class="rav">{{ p.rider.name|first }}</div>{{ p.rider.name }}</div></td>
+    <td class="fw7 text-g">&#8377;{{ p.amount }}</td>
+    <td><span class="badge {% if p.status == 'paid' %}b-g{% elif p.status == 'failed' %}b-r{% else %}b-w{% endif %}">{{ p.status|title }}</span></td>
+    <td>{{ p.payout_date }}</td>
+    <td style="color:var(--t2);font-size:12px;">{% if p.week_start %}{{ p.week_start }} to {{ p.week_end }}{% else %}-{% endif %}</td>
+    <td style="color:var(--t2);">{{ p.note|default:"-"|truncatechars:25 }}</td>
+    <td>{% if p.status != 'paid' %}<a href="{% url 'payout_mark_paid' p.pk %}" class="btn btn-g btn-sm">Mark Paid</a>{% else %}<span style="color:var(--ok);font-size:12px;">Paid</span>{% endif %}</td>
+  </tr>
+  {% empty %}<tr><td colspan="7" style="text-align:center;color:var(--t2);padding:24px;">No payouts. <a href="{% url 'payout_add' %}">Add one</a></td></tr>
+  {% endfor %}</tbody>
+  </table>
+</div>
+{% endblock %}

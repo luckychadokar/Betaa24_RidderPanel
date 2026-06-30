@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block page_title %}Cancelled Tasks{% endblock %}
+{% block content %}
+<div class="sg" style="grid-template-columns:repeat(3,1fr);">
+  <div class="sc"><div class="sc-label">Total Cancelled</div><div class="sc-val r">{{ tasks.count }}</div></div>
+  <div class="sc"><div class="sc-label">By Rider</div><div class="sc-val w">{{ by_rider }}</div></div>
+  <div class="sc"><div class="sc-label">By Customer</div><div class="sc-val b">{{ by_customer }}</div></div>
+</div>
+<div class="tbl-wrap">
+  <table><thead><tr><th>Task ID</th><th>Rider</th><th>Customer</th><th>Date</th><th>Cancelled By</th><th>Reason</th></tr></thead>
+  <tbody>{% for t in tasks %}
+  <tr>
+    <td class="text-y fw7">{{ t.task_id }}</td>
+    <td>{{ t.rider.name|default:"-" }}</td>
+    <td>{{ t.customer_name|default:"-" }}</td>
+    <td>{{ t.task_date }}</td>
+    <td><span class="badge {% if t.cancelled_by == 'rider' %}b-w{% elif t.cancelled_by == 'customer' %}b-b{% else %}b-r{% endif %}">{{ t.cancelled_by|default:"-"|title }}</span></td>
+    <td style="color:var(--t2);">{{ t.cancellation_reason|default:"-" }}</td>
+  </tr>
+  {% empty %}<tr><td colspan="6" style="text-align:center;color:var(--t2);padding:24px;">No cancelled tasks</td></tr>
+  {% endfor %}</tbody>
+  </table>
+</div>
+{% endblock %}

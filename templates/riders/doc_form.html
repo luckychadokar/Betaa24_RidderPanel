@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block page_title %}Documents - {{ rider.name }}{% endblock %}
+{% block content %}
+<div class="card" style="max-width:760px;">
+  <div class="card-title" style="margin-bottom:16px;">Documents - {{ rider.name }}</div>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+
+    <div style="font-size:13px;font-weight:700;color:var(--y);margin:14px 0 10px;">Aadhaar Card</div>
+    <div class="form-row">
+      <div class="fg"><label>Aadhaar Number</label><input type="text" name="aadhaar_number" value="{{ form.aadhaar_number.value|default:'' }}" maxlength="14" placeholder="XXXX XXXX XXXX"></div>
+      <div class="fg"><label>Status</label>
+        <select name="aadhaar_status"><option value="pending">Pending</option><option value="uploaded">Uploaded</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Front Side</label><input type="file" name="aadhaar_front" accept="image/*"></div>
+      <div class="fg"><label>Back Side</label><input type="file" name="aadhaar_back" accept="image/*"></div>
+    </div>
+
+    <div style="font-size:13px;font-weight:700;color:var(--y);margin:18px 0 10px;">Driving License</div>
+    <div class="form-row">
+      <div class="fg"><label>DL Number</label><input type="text" name="dl_number" value="{{ form.dl_number.value|default:'' }}"></div>
+      <div class="fg"><label>Status</label>
+        <select name="dl_status"><option value="pending">Pending</option><option value="uploaded">Uploaded</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Front Side</label><input type="file" name="dl_front" accept="image/*"></div>
+      <div class="fg"><label>Back Side</label><input type="file" name="dl_back" accept="image/*"></div>
+    </div>
+
+    <div style="font-size:13px;font-weight:700;color:var(--y);margin:18px 0 10px;">RC Card (Vehicle Registration)</div>
+    <div class="form-row">
+      <div class="fg"><label>RC Number</label><input type="text" name="rc_number" value="{{ form.rc_number.value|default:'' }}"></div>
+      <div class="fg"><label>Status</label>
+        <select name="rc_status"><option value="pending">Pending</option><option value="uploaded">Uploaded</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+      </div>
+    </div>
+    <div class="fg"><label>RC Photo (Front)</label><input type="file" name="rc_front" accept="image/*"></div>
+
+    <div style="font-size:13px;font-weight:700;color:var(--y);margin:18px 0 10px;">Vehicle Insurance</div>
+    <div class="form-row">
+      <div class="fg"><label>Insurance / Policy Number</label><input type="text" name="insurance_number" value="{{ form.insurance_number.value|default:'' }}"></div>
+      <div class="fg"><label>Expiry Date</label><input type="date" name="insurance_expiry" value="{{ form.insurance_expiry.value|default:'' }}"></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Insurance Document</label><input type="file" name="insurance_doc" accept="image/*,.pdf"></div>
+      <div class="fg"><label>Status</label>
+        <select name="insurance_status"><option value="pending">Pending</option><option value="uploaded">Uploaded</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+      </div>
+    </div>
+
+    <div style="font-size:13px;font-weight:700;color:var(--y);margin:18px 0 10px;">Marksheet (Education Proof)</div>
+    <div class="form-row">
+      <div class="fg"><label>Marksheet Document</label><input type="file" name="marksheet_doc" accept="image/*,.pdf"></div>
+      <div class="fg"><label>Status</label>
+        <select name="marksheet_status"><option value="pending">Pending</option><option value="uploaded">Uploaded</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+      </div>
+    </div>
+
+    <div style="font-size:13px;font-weight:700;color:var(--y);margin:18px 0 10px;">Police Verification</div>
+    <div class="form-row">
+      <div class="fg"><label>Verification Document</label><input type="file" name="police_verification_doc" accept="image/*,.pdf"></div>
+      <div class="fg"><label>Status</label>
+        <select name="police_verification_status"><option value="pending">Pending</option><option value="uploaded">Uploaded</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+      </div>
+    </div>
+
+    <div style="font-size:13px;font-weight:700;color:var(--y);margin:18px 0 10px;">PAN Card</div>
+    <div class="form-row">
+      <div class="fg"><label>PAN Number</label><input type="text" name="pan_number" value="{{ form.pan_number.value|default:'' }}" maxlength="10" style="text-transform:uppercase;"></div>
+      <div class="fg"><label>Status</label>
+        <select name="pan_status"><option value="pending">Pending</option><option value="uploaded">Uploaded</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+      </div>
+    </div>
+    <div class="fg"><label>PAN Card Photo</label><input type="file" name="pan_doc" accept="image/*"></div>
+
+    <div style="font-size:13px;font-weight:700;color:var(--y);margin:18px 0 10px;">Overall Document Status</div>
+    <div class="fg"><label>Overall Status</label>
+      <select name="overall_status"><option value="pending">Pending</option><option value="uploaded">Uploaded</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:18px;">
+      <button type="submit" class="btn btn-y"><i class="fa-solid fa-check"></i> Save Documents</button>
+      <a href="{% url 'rider_detail' rider.pk %}" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

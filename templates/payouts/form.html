@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card" style="max-width:600px;">
+  <div class="card-title" style="margin-bottom:16px;">{{ title }}</div>
+  <form method="post">{% csrf_token %}
+    <div class="form-row">
+      <div class="fg"><label>Rider</label>
+        <select name="rider">{% for r in form.rider.field.queryset %}<option value="{{ r.pk }}" {% if form.rider.value|stringformat:"s" == r.pk|stringformat:"s" %}selected{% endif %}>{{ r.name }} (Pending: Rs.{{ r.pending_amount }})</option>{% endfor %}</select>
+      </div>
+      <div class="fg"><label>Amount (Rs.)</label><input type="number" name="amount" value="{{ form.amount.value|default:'' }}" step="0.01"></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Status</label>
+        <select name="status"><option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option></select>
+      </div>
+      <div class="fg"><label>Payout Date</label><input type="date" name="payout_date" value="{{ form.payout_date.value|default:'' }}"></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Week Start</label><input type="date" name="week_start" value="{{ form.week_start.value|default:'' }}"></div>
+      <div class="fg"><label>Week End</label><input type="date" name="week_end" value="{{ form.week_end.value|default:'' }}"></div>
+    </div>
+    <div class="fg"><label>Note</label><textarea name="note" rows="2">{{ form.note.value|default:'' }}</textarea></div>
+    <div style="display:flex;gap:10px;"><button type="submit" class="btn btn-y">Save Payout</button><a href="{% url 'payout_list' %}" class="btn btn-ghost">Cancel</a></div>
+  </form>
+</div>
+{% endblock %}

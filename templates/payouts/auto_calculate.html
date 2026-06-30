@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block page_title %}Auto-Calculate Payout{% endblock %}
+{% block content %}
+<div class="card" style="max-width:600px;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+    <div class="rav rav-lg">{{ rider.name|first }}</div>
+    <div>
+      <div style="font-size:16px;font-weight:800;">{{ rider.name }}</div>
+      <div style="font-size:12px;color:var(--y);font-weight:700;">{{ rider.beta_code|default:"No App ID" }}</div>
+    </div>
+  </div>
+
+  <div class="alert alert-w">
+    Select the week range. System will auto-calculate total earnings from all <strong>completed tasks</strong> in that period and create a pending payout for the remaining amount.
+  </div>
+
+  <form method="post">{% csrf_token %}
+    <div class="form-row">
+      <div class="fg"><label>Week Start</label><input type="date" name="week_start" value="{{ default_start|date:'Y-m-d' }}" required></div>
+      <div class="fg"><label>Week End</label><input type="date" name="week_end" value="{{ default_end|date:'Y-m-d' }}" required></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:10px;">
+      <button type="submit" class="btn btn-y"><i class="fa-solid fa-calculator"></i> Calculate & Create Payout</button>
+      <a href="{% url 'rider_payout_summary' rider.pk %}" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

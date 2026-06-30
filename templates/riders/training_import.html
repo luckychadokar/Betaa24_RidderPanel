@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block page_title %}Import Training Data{% endblock %}
+{% block content %}
+<div class="card" style="max-width:900px;">
+  <div class="card-title" style="margin-bottom:10px;"><i class="fa-solid fa-graduation-cap" style="color:var(--y);margin-right:7px;"></i>Import Training Records</div>
+  <div class="alert alert-w">
+    Paste data copied from Excel. Format (tab-separated): <strong>Date, Name, Number, Alternate Number, Location, State, City, Training Done By, Final Remark</strong>
+  </div>
+  <form method="post">{% csrf_token %}
+    <div class="fg">
+      <label>Paste Data Here</label>
+      <textarea name="raw_data" rows="10" placeholder="07-Apr-2026	Atul Jain	8770031538			Madhya Pradesh	Indore		Done"></textarea>
+    </div>
+    <button type="submit" class="btn btn-y"><i class="fa-solid fa-upload"></i> Import Training Data</button>
+  </form>
+
+  {% if imported %}
+  <div style="margin-top:20px;">
+    <div class="alert alert-ok">{{ imported|length }} training records imported/updated</div>
+    <div class="tbl-wrap">
+      <table><thead><tr><th>Name</th><th>Mobile</th><th>Status</th><th>Remark</th></tr></thead>
+      <tbody>{% for r in imported %}<tr><td>{{ r.name }}</td><td>{{ r.mobile }}</td><td><span class="badge {% if r.status == 'completed' %}b-g{% elif r.status == 'rejected' %}b-r{% else %}b-w{% endif %}">{{ r.status|title }}</span></td><td style="color:var(--t2);">{{ r.remark|default:"-" }}</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if skipped %}
+  <div class="alert alert-w" style="margin-top:14px;">{{ skipped|length }} rows skipped</div>
+  <div class="tbl-wrap">
+    <table><thead><tr><th>Row</th><th>Reason</th><th>Raw Data</th></tr></thead>
+    <tbody>{% for s in skipped %}<tr><td>{{ s.row }}</td><td style="color:var(--err);">{{ s.reason }}</td><td style="color:var(--t2);font-size:11px;">{{ s.raw }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block page_title %}Delete Task{% endblock %}
+{% block content %}
+<div class="card" style="max-width:500px;">
+  <div style="font-size:15px;font-weight:700;margin-bottom:10px;color:var(--err);">Delete Task {{ task.task_id }}?</div>
+  <p style="color:var(--t2);margin-bottom:20px;">This cannot be undone.</p>
+  <form method="post" style="display:flex;gap:10px;">{% csrf_token %}
+    <button type="submit" class="btn btn-r">Yes, Delete</button>
+    <a href="{% url 'task_list' %}" class="btn btn-ghost">Cancel</a>
+  </form>
+</div>
+{% endblock %}
