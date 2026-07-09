@@ -94,51 +94,91 @@ def payout_export(request):
 
 @login_required
 def auto_calculate_payout(request, rider_pk):
-    """Auto-calculate weekly payout for a rider based on completed tasks"""
     from tasks.models import Task
     from datetime import timedelta, date
     from django.db.models import Sum
+    from decimal import Decimal
 
     rider = get_object_or_404(Rider, pk=rider_pk)
 
     if request.method == 'POST':
         week_start = request.POST.get('week_start')
         week_end = request.POST.get('week_end')
+        attendance_days = int(request.POST.get('attendance_days', 0))
 
+        # Task earnings
         tasks_in_week = Task.objects.filter(
             rider=rider, status='completed',
             task_date__gte=week_start, task_date__lte=week_end
         )
-        total_earned = tasks_in_week.aggregate(t=Sum('earnings'))['t'] or 0
+        task_amount = tasks_in_week.aggregate(t=Sum('earnings'))['t'] or Decimal('0')
         task_count = tasks_in_week.count()
 
-        # Check if a payout already exists for this exact week (avoid duplicate double-pay)
+        # Login/Attendance bonus
+        login_amount = Decimal(attendance_days * 50)
+
+        # Total before TDS
+        total_amount = task_amount + login_amount
+
+        # TDS @ 2%
+        tds = round(total_amount * Decimal('0.02'), 2)
+
+        # Net payout
+        net_payout = round(total_amount - tds, 2)
+
+        # Already paid check
         already_paid = Payout.objects.filter(
             rider=rider, week_start=week_start, week_end=week_end
-        ).aggregate(t=Sum('amount'))['t'] or 0
+        ).aggregate(t=Sum('amount'))['t'] or Decimal('0')
 
-        amount_due = total_earned - already_paid
-
-        if amount_due <= 0:
-            messages.warning(request, f'No pending amount for this week. Already settled (₹{already_paid}).')
+        if net_payout <= already_paid:
+            messages.warning(
+                request,
+                f'No pending amount. Already settled (₹{already_paid}).'
+            )
             return redirect('rider_payout_summary', pk=rider.pk)
+
+        # Bank details
+        bank = getattr(rider, 'bank_detail', None)
+        docs = getattr(rider, 'documents', None)
 
         payout = Payout.objects.create(
             rider=rider,
-            amount=amount_due,
+            amount=net_payout,
             status='pending',
             payout_date=date.today(),
             week_start=week_start,
             week_end=week_end,
-            note=f'Auto-calculated: {task_count} tasks completed in this week'
+            note=(
+                f'Tasks: {task_count} | Task Amount: ₹{task_amount} | '
+                f'Login Amount: ₹{login_amount} ({attendance_days} days×₹50) | '
+                f'Total: ₹{total_amount} | TDS(2%): ₹{tds} | Net Pay: ₹{net_payout}'
+            )
         )
         messages.success(
             request,
-            f'Payout of ₹{amount_due} created for {rider.name} ({task_count} tasks, {week_start} to {week_end})'
+            f'Payout ₹{net_payout} created for {rider.name} '
+            f'(Task ₹{task_amount} + Login ₹{login_amount} - TDS ₹{tds})'
         )
         return redirect('payout_list')
 
-    # GET: show form with default current week (Mon-Sun)
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    sunday = monday + timedelta(days=6)
+
+    # Get bank and doc details for preview
+    bank = getattr(rider, 'bank_detail', None)
+    docs = getattr(rider, 'documents', None)
+
+    return render(request, 'payouts/auto_calculate.html', {
+        'rider': rider,
+        'default_start': monday,
+        'default_end': sunday,
+        'bank': bank,
+        'docs': docs,
+    })
+    
+    # GET — default current week Mon-Sun
     today = date.today()
     monday = today - timedelta(days=today.weekday())
     sunday = monday + timedelta(days=6)
@@ -148,3 +188,22 @@ def auto_calculate_payout(request, rider_pk):
         'default_start': monday,
         'default_end': sunday,
     })
+
+from django.http import JsonResponse
+
+@login_required
+def payout_preview(request):
+    """AJAX: return task earnings for a rider in a date range"""
+    from tasks.models import Task
+    from django.db.models import Sum
+    rider_pk = request.GET.get('rider')
+    date_from = request.GET.get('from')
+    date_to = request.GET.get('to')
+    try:
+        earnings = Task.objects.filter(
+            rider_id=rider_pk, status='completed',
+            task_date__gte=date_from, task_date__lte=date_to
+        ).aggregate(t=Sum('earnings'))['t'] or 0
+        return JsonResponse({'earnings': float(earnings)})
+    except Exception as e:
+        return JsonResponse({'earnings': 0})

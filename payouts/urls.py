@@ -8,5 +8,6 @@ urlpatterns = [
     path("rider/<int:pk>/", views.rider_payout_summary, name="rider_payout_summary"),
     path("export/", views.payout_export, name="payout_export"),
     path('auto-calculate/<int:rider_pk>/', views.auto_calculate_payout, name='auto_calculate_payout'),
+    path('preview/', views.payout_preview, name='payout_preview'),
 ]
 

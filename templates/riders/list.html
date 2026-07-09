@@ -25,7 +25,7 @@
 <div class="tbl-wrap">
   <div class="tbl-hd"><div class="card-title"><i class="fa-solid fa-person-biking" style="color:var(--y);margin-right:7px;"></i>Riders ({{ riders.count }})</div></div>
   <table>
-    <thead><tr><th>Name</th><th>Beta ID</th><th>Mobile</th><th>City</th><th>Joining Date</th><th>Tasks</th><th>Earnings</th><th>Pending</th><th>Status</th><th>Action</th></tr></thead>
+   <thead><tr><th>Name</th><th>Beta ID</th><th>Mobile</th><th>City</th><th>Address</th><th>Joining Date</th><th>Tasks</th><th>Earnings</th><th>Pending</th><th>Status</th><th>Action</th></tr></thead>
     <tbody>
     {% for r in riders %}
     <tr>
@@ -33,6 +33,7 @@
 <td class="text-y fw7">{{ r.beta_code|default:"-" }}</td>
 <td style="color:var(--t2);">{{ r.mobile }}</td>
 <td>{{ r.city }}</td>
+<td style="color:var(--t2);font-size:12px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ r.address|default:"-" }}</td>
 <td style="color:var(--t2);">{{ r.joining_date }}</td>
 <td>{{ r.total_tasks }}</td>
       <td class="text-g fw7">&#8377;{{ r.total_earnings }}</td>

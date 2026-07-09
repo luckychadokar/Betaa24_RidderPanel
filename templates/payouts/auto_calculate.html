@@ -1,28 +1,132 @@
 {% extends 'base.html' %}
 {% block page_title %}Auto-Calculate Payout{% endblock %}
 {% block content %}
-<div class="card" style="max-width:600px;">
+<div class="card" style="max-width:700px;">
+
+  <!-- Rider Info -->
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
     <div class="rav rav-lg">{{ rider.name|first }}</div>
     <div>
       <div style="font-size:16px;font-weight:800;">{{ rider.name }}</div>
       <div style="font-size:12px;color:var(--y);font-weight:700;">{{ rider.beta_code|default:"No App ID" }}</div>
+      <div style="font-size:12px;color:var(--t2);">{{ rider.mobile }}</div>
     </div>
   </div>
 
-  <div class="alert alert-w">
-    Select the week range. System will auto-calculate total earnings from all <strong>completed tasks</strong> in that period and create a pending payout for the remaining amount.
+  <!-- Document Info Row -->
+  <div style="background:var(--card2);border:1px solid var(--b);border-radius:10px;padding:14px;margin-bottom:16px;">
+    <div style="font-size:11px;color:var(--y);font-weight:700;text-transform:uppercase;margin-bottom:10px;">KYC & Bank Details</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--t2);">Aadhaar</span><span>{{ docs.aadhaar_number|default:"-" }}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--t2);">PAN</span><span>{{ docs.pan_number|default:"-" }}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--t2);">IFSC Code</span><span>{{ bank.ifsc_code|default:"-" }}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--t2);">Account No.</span><span>{% if bank.account_number %}****{{ bank.account_number|slice:"-4:" }}{% else %}-{% endif %}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--t2);">Bank</span><span>{{ bank.bank_name|default:"-" }}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--t2);">Account Type</span><span>{{ bank.get_account_type_display|default:"-" }}</span></div>
+    </div>
+    {% if not bank %}
+    <div style="color:var(--warn);font-size:12px;margin-top:8px;"><i class="fa-solid fa-triangle-exclamation"></i> Bank details not added yet. <a href="{% url 'bank_detail_update' rider.pk %}">Add now</a></div>
+    {% endif %}
   </div>
 
-  <form method="post">{% csrf_token %}
+  <!-- Payout Form -->
+  <form method="post" id="payoutForm">{% csrf_token %}
     <div class="form-row">
-      <div class="fg"><label>Week Start</label><input type="date" name="week_start" value="{{ default_start|date:'Y-m-d' }}" required></div>
-      <div class="fg"><label>Week End</label><input type="date" name="week_end" value="{{ default_end|date:'Y-m-d' }}" required></div>
+      <div class="fg">
+        <label>Week Start</label>
+        <input type="date" name="week_start" id="week_start" value="{{ default_start|date:'Y-m-d' }}" required onchange="updatePreview()">
+      </div>
+      <div class="fg">
+        <label>Week End</label>
+        <input type="date" name="week_end" id="week_end" value="{{ default_end|date:'Y-m-d' }}" required onchange="updatePreview()">
+      </div>
     </div>
+
+    <div class="fg">
+      <label>Attendance Days <span style="color:var(--y);">× ₹50/day (Login Amount)</span></label>
+      <input type="number" name="attendance_days" id="attendance_days"
+        min="0" max="7" value="0"
+        placeholder="0 to 7"
+        oninput="updatePreview()"
+        style="max-width:180px;">
+      <div style="font-size:11px;color:var(--t2);margin-top:4px;">Enter number of days rider was present (0–7)</div>
+    </div>
+
+    <!-- Payout Breakdown Preview -->
+    <div style="background:linear-gradient(135deg,#151200,#1a1800);border:1px solid var(--by);border-radius:10px;padding:16px;margin:14px 0;">
+      <div style="font-size:11px;color:var(--y);text-transform:uppercase;font-weight:700;margin-bottom:12px;">Payout Breakdown</div>
+
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,215,0,0.1);font-size:13px;">
+        <span style="color:var(--t2);">Task Amount</span>
+        <span style="color:var(--ok);font-weight:700;" id="previewTask">₹0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,215,0,0.1);font-size:13px;">
+        <span style="color:var(--t2);">Login Amount <span id="previewDaysLabel" style="font-size:11px;">(0 days × ₹50)</span></span>
+        <span style="color:var(--info);font-weight:700;" id="previewLogin">₹0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,215,0,0.1);font-size:13px;">
+        <span style="color:var(--t2);">Total Amount</span>
+        <span style="color:var(--t);font-weight:700;" id="previewTotal">₹0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,215,0,0.1);font-size:13px;">
+        <span style="color:var(--t2);">TDS @ 2%</span>
+        <span style="color:var(--err);font-weight:700;" id="previewTDS">- ₹0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:18px;font-weight:800;">
+        <span style="color:var(--t2);">Net Pay Out</span>
+        <span style="color:var(--y);" id="previewNet">₹0</span>
+      </div>
+    </div>
+
     <div style="display:flex;gap:10px;margin-top:10px;">
-      <button type="submit" class="btn btn-y"><i class="fa-solid fa-calculator"></i> Calculate & Create Payout</button>
+      <button type="submit" class="btn btn-y" style="flex:1;justify-content:center;">
+        <i class="fa-solid fa-calculator"></i> Create Payout
+      </button>
       <a href="{% url 'rider_payout_summary' rider.pk %}" class="btn btn-ghost">Cancel</a>
     </div>
   </form>
 </div>
+
+<script>
+let taskEarnings = 0;
+let fetchTimeout;
+
+function updatePreview(){
+  const days = parseInt(document.getElementById('attendance_days').value) || 0;
+  const loginAmt = days * 50;
+  const weekStart = document.getElementById('week_start').value;
+  const weekEnd = document.getElementById('week_end').value;
+
+  document.getElementById('previewDaysLabel').textContent = `(${days} days × ₹50)`;
+  document.getElementById('previewLogin').textContent = `₹${loginAmt}`;
+
+  clearTimeout(fetchTimeout);
+  if(weekStart && weekEnd){
+    fetchTimeout = setTimeout(()=>{
+      fetch(`/payouts/preview/?rider={{ rider.pk }}&from=${weekStart}&to=${weekEnd}`)
+        .then(r => r.json())
+        .then(data => {
+          taskEarnings = parseFloat(data.earnings) || 0;
+          calcAndShow(loginAmt);
+        })
+        .catch(()=>{ calcAndShow(loginAmt); });
+    }, 400);
+  } else {
+    calcAndShow(loginAmt);
+  }
+}
+
+function calcAndShow(loginAmt){
+  const total = taskEarnings + loginAmt;
+  const tds = Math.round(total * 0.02 * 100) / 100;
+  const net = Math.round((total - tds) * 100) / 100;
+
+  document.getElementById('previewTask').textContent = `₹${taskEarnings.toFixed(2)}`;
+  document.getElementById('previewTotal').textContent = `₹${total.toFixed(2)}`;
+  document.getElementById('previewTDS').textContent = `- ₹${tds.toFixed(2)}`;
+  document.getElementById('previewNet').textContent = `₹${net.toFixed(2)}`;
+}
+
+updatePreview();
+</script>
 {% endblock %}
