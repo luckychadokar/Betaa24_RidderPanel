@@ -101,7 +101,8 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_DIR = BASE_DIR / 'static'
+STATICFILES_DIRS = [STATIC_DIR] if STATIC_DIR.exists() else []
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
@@ -124,3 +125,15 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+# Auto-create superuser on first deploy
+# Auto-create superuser on first deploy
+
+if os.environ.get('DATABASE_URL'):
+    try:
+        import django
+        from django.contrib.auth.models import User
+        if not User.objects.filter(username='admin').exists():
+            User.objects.create_superuser('admin', 'admin@beta24.in', 'admin123')
+            print('Superuser created: admin / admin123')
+    except Exception as e:
+        print(f'Superuser creation skipped: {e}')
