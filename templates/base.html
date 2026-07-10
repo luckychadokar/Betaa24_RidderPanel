@@ -127,7 +127,12 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <a href="/admin/"><i class="fa-solid fa-shield-halved"></i> Django Admin</a>
     </div>
     <div class="sb-item">
-      <a href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+      <form method="post" action="{% url 'logout' %}" style="display:inline;">
+  {% csrf_token %}
+  <button type="submit" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:0;color:inherit;font-size:13px;width:100%;">
+    <i class="fa-solid fa-right-from-bracket" style="width:16px;text-align:center;"></i> Logout
+  </button>
+</form>
     </div>
   </nav>
   <div class="sb-foot">
