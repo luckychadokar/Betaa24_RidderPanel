@@ -125,15 +125,14 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
-# Auto-create superuser on first deploy
-# Auto-create superuser on first deploy
+CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
+CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
-if os.environ.get('DATABASE_URL'):
-    try:
-        import django
-        from django.contrib.auth.models import User
-        if not User.objects.filter(username='admin').exists():
-            User.objects.create_superuser('admin', 'admin@beta24.in', 'admin123')
-            print('Superuser created: admin / admin123')
-    except Exception as e:
-        print(f'Superuser creation skipped: {e}')
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
