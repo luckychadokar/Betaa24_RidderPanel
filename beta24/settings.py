@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'beta24-secret-key-change-in-production-xyz123'
@@ -64,16 +65,30 @@ WSGI_APPLICATION = 'beta24.wsgi.application'
 # }
 
 # MySQL (uncomment & configure when ready)
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'beta24',
-        'USER': 'root',
-        'PASSWORD': 'root',
-        'HOST': 'localhost',
-        'PORT': '3306',
+# 
+DATABASE_URL = os.environ.get('DATABASE_URL')  # Get the database URL from environment variable
+
+if DATABASE_URL:
+    # Render pe PostgreSQL
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+        )
     }
-}
+else:
+    # Local pe MySQL
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'beta24',
+            'USER': 'root',
+            'PASSWORD': 'root',   # apna MySQL password
+            'HOST': 'localhost',
+            'PORT': '3306',
+            'OPTIONS': {'charset': 'utf8mb4'},
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
