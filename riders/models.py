@@ -28,7 +28,6 @@ class Rider(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
     def __str__(self):
         return f"{self.name} ({self.mobile})"
 
@@ -72,16 +71,20 @@ class RiderTraining(models.Model):
     reason = models.CharField(max_length=50, choices=NOT_DONE_REASONS, blank=True)
     reason_detail = models.TextField(blank=True)
     training_date = models.DateField(null=True, blank=True)
-
-    # New fields from training sheet
     alternate_number = models.CharField(max_length=15, blank=True)
     location = models.CharField(max_length=150, blank=True)
     state = models.CharField(max_length=100, blank=True)
     city = models.CharField(max_length=100, blank=True)
     training_done_by = models.CharField(max_length=100, blank=True)
     final_remark = models.TextField(blank=True)
-
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Auto-promote rider to active when training is completed
+        if self.status == 'completed' and self.rider.status != 'active':
+            self.rider.status = 'active'
+            self.rider.save(update_fields=['status'])
 
     def __str__(self):
         return f"{self.rider.name} - {self.status}"
@@ -108,7 +111,7 @@ class RiderDocument(models.Model):
     dl_back = models.ImageField(upload_to='docs/dl/', blank=True, null=True)
     dl_status = models.CharField(max_length=20, choices=DOC_STATUS, default='pending')
 
-    # RC Card (Vehicle Registration)
+    # RC Card
     rc_number = models.CharField(max_length=30, blank=True)
     rc_front = models.ImageField(upload_to='docs/rc/', blank=True, null=True)
     rc_status = models.CharField(max_length=20, choices=DOC_STATUS, default='pending')
@@ -119,7 +122,7 @@ class RiderDocument(models.Model):
     insurance_expiry = models.DateField(null=True, blank=True)
     insurance_status = models.CharField(max_length=20, choices=DOC_STATUS, default='pending')
 
-    # Marksheet / Education Proof
+    # Marksheet
     marksheet_doc = models.ImageField(upload_to='docs/marksheet/', blank=True, null=True)
     marksheet_status = models.CharField(max_length=20, choices=DOC_STATUS, default='pending')
 
@@ -178,38 +181,3 @@ class WalletTransaction(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-class RiderTraining(models.Model):
-    TRAINING_STATUS = [
-        ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('rejected', 'Rejected'),
-    ]
-    NOT_DONE_REASONS = [
-        ('not_interested', 'Not Interested'),
-        ('not_reachable', 'Phone Not Reachable'),
-        ('docs_missing', 'Documents Missing'),
-        ('failed_verification', 'Failed Verification'),
-        ('other', 'Other'),
-    ]
-    rider = models.OneToOneField(Rider, on_delete=models.CASCADE, related_name='training')
-    status = models.CharField(max_length=20, choices=TRAINING_STATUS, default='pending')
-    reason = models.CharField(max_length=50, choices=NOT_DONE_REASONS, blank=True)
-    reason_detail = models.TextField(blank=True)
-    training_date = models.DateField(null=True, blank=True)
-    alternate_number = models.CharField(max_length=15, blank=True)
-    location = models.CharField(max_length=150, blank=True)
-    state = models.CharField(max_length=100, blank=True)
-    city = models.CharField(max_length=100, blank=True)
-    training_done_by = models.CharField(max_length=100, blank=True)
-    final_remark = models.TextField(blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        # Auto-promote rider to active when training is completed
-        if self.status == 'completed' and self.rider.status != 'active':
-            self.rider.status = 'active'
-            self.rider.save(update_fields=['status'])
-
-    def __str__(self):
-        return f"{self.rider.name} - {self.status}"
