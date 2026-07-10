@@ -34,6 +34,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'beta24.middleware.NoCacheMiddleware',
 ]
 
 ROOT_URLCONF = 'beta24.urls'
@@ -136,3 +137,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
+# Security headers - prevent back button after logout
+SECURE_BROWSER_XSS_FILTER = True

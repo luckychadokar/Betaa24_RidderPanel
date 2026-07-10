@@ -6,8 +6,12 @@ from riders.models import Rider
 from tasks.models import Task
 from payouts.models import Payout
 import json
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
 
 
+
+@never_cache
 @login_required
 def dashboard(request):
     today = timezone.now().date()
