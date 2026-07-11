@@ -44,14 +44,7 @@
   </div>
 
   <form method="post">{% csrf_token %}
-    <div class="fg"><label>Recharge Type</label>
-      <select name="recharge_type" id="recharge_type">
-        <option value="base">Base Plan ₹49</option>
-        <option value="topup_task">Task Top-up ₹25/task</option>
-        <option value="topup_time">Time Top-up ₹1/min</option>
-        <option value="topup_km">Distance Top-up ₹10/km</option>
-      </select>
-    </div>
+    <input type="hidden" name="recharge_type" id="recharge_type" value="base">
     <div class="form-row">
       <div class="fg"><label>Amount Paid (₹)</label><input type="number" name="amount_paid" id="amount_paid" step="0.01" required></div>
     </div>
