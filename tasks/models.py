@@ -99,6 +99,8 @@ class Task(models.Model):
     distance_km = models.DecimalField(max_digits=6, decimal_places=2, default=2.0)
     customer_name = models.CharField(max_length=100, blank=True)
     customer_number = models.CharField(max_length=15, blank=True)
+    customer_beta_id = models.CharField(max_length=30, blank=True)
+    task_work_id = models.CharField(max_length=30, blank=True)
     pickup_address = models.TextField(blank=True)
     drop_address = models.TextField(blank=True)
     remarks = models.TextField(blank=True)

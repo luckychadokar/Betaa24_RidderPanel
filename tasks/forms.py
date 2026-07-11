@@ -31,3 +31,8 @@ class CustomerRechargeForm(forms.ModelForm):
         widgets = {
             'note': forms.Textarea(attrs={'rows': 2}),
         }
+fields = ['rider', 'task_date', 'task_type', 'num_tasks', 'time_taken',
+          'distance_km', 'customer_name', 'customer_number',
+          'customer_beta_id', 'task_work_id', 'customer_wallet',
+          'pickup_address', 'drop_address', 'remarks', 'status',
+          'cancelled_by', 'cancellation_reason']

@@ -59,6 +59,8 @@ def task_edit(request, pk):
 def task_detail(request, pk):
     task = get_object_or_404(Task, pk=pk)
     rows = [
+        ('Customer Beta ID', task.customer_beta_id or '-'),
+('Task Work ID', task.task_work_id or '-'),
         ('Rider', task.rider.name if task.rider else '-'),
         ('Task Type', task.get_task_type_display()),
         ('Task Date', task.task_date),

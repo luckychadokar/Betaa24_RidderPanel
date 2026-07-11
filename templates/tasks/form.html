@@ -43,6 +43,16 @@
       <div class="fg"><label>Customer Name</label><input type="text" name="customer_name" value="{{ form.customer_name.value|default:'' }}"></div>
       <div class="fg"><label>Customer Phone</label><input type="text" name="customer_number" value="{{ form.customer_number.value|default:'' }}"></div>
     </div>
+    <div class="form-row">
+      <div class="fg">
+        <label>Customer Beta ID</label>
+        <input type="text" name="customer_beta_id" value="{{ form.customer_beta_id.value|default:'' }}" placeholder="BETA-XXXXXX">
+      </div>
+      <div class="fg">
+        <label>Task Work ID</label>
+        <input type="text" name="task_work_id" value="{{ form.task_work_id.value|default:'' }}" placeholder="Work ID">
+      </div>
+    </div>
     <div class="fg">
       <label>Customer Mobile (for wallet lookup)</label>
       <div style="display:flex;gap:8px;">
