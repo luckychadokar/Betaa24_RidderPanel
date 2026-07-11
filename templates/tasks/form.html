@@ -43,6 +43,28 @@
       <div class="fg"><label>Customer Name</label><input type="text" name="customer_name" value="{{ form.customer_name.value|default:'' }}"></div>
       <div class="fg"><label>Customer Phone</label><input type="text" name="customer_number" value="{{ form.customer_number.value|default:'' }}"></div>
     </div>
+    <div class="fg">
+      <label>Customer Mobile (for wallet lookup)</label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="lookup_mobile" placeholder="Enter mobile to find wallet" maxlength="10" style="flex:1;">
+        <button type="button" onclick="lookupWallet()" class="btn btn-ghost">Check Balance</button>
+      </div>
+    </div>
+
+    <!-- Wallet Info Box -->
+    <div id="walletInfo" style="display:none;background:var(--card2);border:1px solid var(--by);border-radius:10px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:11px;color:var(--y);text-transform:uppercase;margin-bottom:8px;">Customer Wallet Balance</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;">
+        <div><div style="font-size:20px;font-weight:800;color:var(--ok);" id="w_tasks">0</div><div style="font-size:11px;color:var(--t2);">Tasks Left</div></div>
+        <div><div style="font-size:20px;font-weight:800;color:var(--info);" id="w_min">0</div><div style="font-size:11px;color:var(--t2);">Minutes Left</div></div>
+        <div><div style="font-size:20px;font-weight:800;color:var(--warn);" id="w_km">0</div><div style="font-size:11px;color:var(--t2);">KM Left</div></div>
+      </div>
+      <input type="hidden" name="customer_wallet" id="wallet_id">
+    </div>
+
+    <div id="walletNotFound" style="display:none;" class="alert alert-w">
+      <i class="fa-solid fa-triangle-exclamation"></i> No wallet found for this mobile. <a href="{% url 'customer_wallet_add' %}">Create wallet</a>
+    </div>
     <div class="fg"><label>Pickup Address</label><textarea name="pickup_address" rows="2">{{ form.pickup_address.value|default:'' }}</textarea></div>
     <div class="fg"><label>Drop Address</label><textarea name="drop_address" rows="2">{{ form.drop_address.value|default:'' }}</textarea></div>
     <div class="fg"><label>Remarks</label><textarea name="remarks" rows="2">{{ form.remarks.value|default:'' }}</textarea></div>
@@ -65,5 +87,25 @@ function calc(){
   document.getElementById('ep').textContent='Rs.'+a.toFixed(2);
 }
 calc();
+
+function lookupWallet(){
+  const mobile = document.getElementById('lookup_mobile').value;
+  if(mobile.length !== 10){ alert('Enter 10 digit mobile'); return; }
+  fetch(`/tasks/customers/api/?mobile=${mobile}`)
+    .then(r => r.json())
+    .then(data => {
+      if(data.found){
+        document.getElementById('walletInfo').style.display = 'block';
+        document.getElementById('walletNotFound').style.display = 'none';
+        document.getElementById('w_tasks').textContent = data.tasks;
+        document.getElementById('w_min').textContent = data.minutes;
+        document.getElementById('w_km').textContent = data.km;
+        document.getElementById('wallet_id').value = data.wallet_id;
+      } else {
+        document.getElementById('walletInfo').style.display = 'none';
+        document.getElementById('walletNotFound').style.display = 'block';
+      }
+    });
+}
 </script>
 {% endblock %}

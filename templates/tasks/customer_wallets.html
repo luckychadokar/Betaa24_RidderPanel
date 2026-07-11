@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block page_title %}Customer Wallets{% endblock %}
+{% block content %}
+<div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+  <a href="{% url 'customer_wallet_add' %}" class="btn btn-y"><i class="fa-solid fa-plus"></i> Add Customer</a>
+</div>
+<div class="tbl-wrap">
+  <div class="tbl-hd"><div class="card-title"><i class="fa-solid fa-users" style="color:var(--y);margin-right:7px;"></i>Customer Wallets ({{ wallets.count }})</div></div>
+  <table>
+    <thead><tr><th>Customer</th><th>Mobile</th><th>Tasks Left</th><th>Minutes Left</th><th>KM Left</th><th>Total Recharged</th><th>Total Spent</th><th>Action</th></tr></thead>
+    <tbody>
+    {% for w in wallets %}
+    <tr>
+      <td style="font-weight:600;">{{ w.customer_name }}</td>
+      <td style="color:var(--t2);">{{ w.customer_mobile }}</td>
+      <td><span class="badge {% if w.available_tasks > 0 %}b-g{% else %}b-r{% endif %}">{{ w.available_tasks }}</span></td>
+      <td>{{ w.available_minutes }} min</td>
+      <td>{{ w.available_km }} km</td>
+      <td class="text-g fw7">&#8377;{{ w.total_recharged }}</td>
+      <td class="text-r fw7">&#8377;{{ w.total_spent }}</td>
+      <td style="display:flex;gap:5px;">
+        <a href="{% url 'customer_wallet_detail' w.pk %}" class="btn btn-ghost btn-sm">View</a>
+        <a href="{% url 'customer_recharge' w.pk %}" class="btn btn-y btn-sm">Recharge</a>
+      </td>
+    </tr>
+    {% empty %}<tr><td colspan="8" style="text-align:center;color:var(--t2);padding:24px;">No customers. <a href="{% url 'customer_wallet_add' %}">Add first customer</a></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

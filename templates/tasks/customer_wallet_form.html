@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card" style="max-width:500px;">
+  <div class="card-title" style="margin-bottom:16px;">{{ title }}</div>
+  <form method="post">{% csrf_token %}
+    <div class="fg"><label>Customer Name</label><input type="text" name="customer_name" required></div>
+    <div class="fg"><label>Mobile Number</label><input type="text" name="customer_mobile" maxlength="10" required></div>
+    <div style="display:flex;gap:10px;">
+      <button type="submit" class="btn btn-y">Save & Add Recharge</button>
+      <a href="{% url 'customer_wallet_list' %}" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

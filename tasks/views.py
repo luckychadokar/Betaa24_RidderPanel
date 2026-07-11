@@ -7,6 +7,8 @@ from .models import Task, calculate_earnings
 from .forms import TaskForm
 import openpyxl
 from io import BytesIO
+from .models import Task, calculate_earnings, CustomerWallet, CustomerRecharge
+from .forms import TaskForm, CustomerWalletForm, CustomerRechargeForm
 
 
 @login_required
@@ -138,3 +140,74 @@ def task_export(request):
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename=beta24_tasks.xlsx'
     return response
+
+@login_required
+def customer_wallet_list(request):
+    wallets = CustomerWallet.objects.all()
+    return render(request, 'tasks/customer_wallets.html', {'wallets': wallets})
+
+
+@login_required
+def customer_wallet_detail(request, pk):
+    wallet = get_object_or_404(CustomerWallet, pk=pk)
+    recharges = wallet.recharges.all()
+    tasks = wallet.tasks.all()
+    return render(request, 'tasks/customer_wallet_detail.html', {
+        'wallet': wallet, 'recharges': recharges, 'tasks': tasks
+    })
+
+
+@login_required
+def customer_wallet_add(request):
+    form = CustomerWalletForm(request.POST or None)
+    if form.is_valid():
+        wallet = form.save()
+        messages.success(request, f'Customer {wallet.customer_name} wallet created!')
+        return redirect('customer_recharge', pk=wallet.pk)
+    return render(request, 'tasks/customer_wallet_form.html', {
+        'form': form, 'title': 'Add Customer'
+    })
+
+
+@login_required
+def customer_recharge(request, pk):
+    wallet = get_object_or_404(CustomerWallet, pk=pk)
+    form = CustomerRechargeForm(request.POST or None)
+
+    # Auto-calculate based on recharge type
+    if form.is_valid():
+        recharge = form.save(commit=False)
+        recharge.wallet = wallet
+
+        # Auto-fill if base plan
+        if recharge.recharge_type == 'base':
+            recharge.amount_paid = 49
+            recharge.tasks_added = 1
+            recharge.minutes_added = 10
+            recharge.km_added = 2
+
+        recharge.save()
+        messages.success(request, 'Recharge added successfully!')
+        return redirect('customer_wallet_detail', pk=pk)
+
+    return render(request, 'tasks/customer_recharge_form.html', {
+        'form': form, 'wallet': wallet
+    })
+
+
+@login_required
+def customer_wallet_api(request):
+    """AJAX: get wallet info by mobile number"""
+    mobile = request.GET.get('mobile', '')
+    try:
+        wallet = CustomerWallet.objects.get(customer_mobile=mobile)
+        return JsonResponse({
+            'found': True,
+            'name': wallet.customer_name,
+            'tasks': wallet.available_tasks,
+            'minutes': wallet.available_minutes,
+            'km': str(wallet.available_km),
+            'wallet_id': wallet.pk,
+        })
+    except CustomerWallet.DoesNotExist:
+        return JsonResponse({'found': False})

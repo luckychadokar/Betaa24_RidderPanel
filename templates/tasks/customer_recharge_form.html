@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block page_title %}Recharge - {{ wallet.customer_name }}{% endblock %}
+{% block content %}
+<div class="card" style="max-width:600px;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+    <div class="rav rav-lg">{{ wallet.customer_name|first }}</div>
+    <div>
+      <div style="font-size:16px;font-weight:800;">{{ wallet.customer_name }}</div>
+      <div style="font-size:12px;color:var(--t2);">{{ wallet.customer_mobile }}</div>
+    </div>
+  </div>
+
+  <!-- Current Balance -->
+  <div style="background:var(--card2);border:1px solid var(--by);border-radius:10px;padding:14px;margin-bottom:16px;">
+    <div style="font-size:11px;color:var(--y);text-transform:uppercase;margin-bottom:8px;">Current Balance</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;">
+      <div><div style="font-size:22px;font-weight:800;color:var(--ok);">{{ wallet.available_tasks }}</div><div style="font-size:11px;color:var(--t2);">Tasks</div></div>
+      <div><div style="font-size:22px;font-weight:800;color:var(--info);">{{ wallet.available_minutes }}</div><div style="font-size:11px;color:var(--t2);">Minutes</div></div>
+      <div><div style="font-size:22px;font-weight:800;color:var(--warn);">{{ wallet.available_km }}</div><div style="font-size:11px;color:var(--t2);">KM</div></div>
+    </div>
+  </div>
+
+  <!-- Recharge Plans Quick Select -->
+  <div style="margin-bottom:16px;">
+    <div style="font-size:11px;color:var(--y);text-transform:uppercase;margin-bottom:8px;">Quick Recharge Plans</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div onclick="selectPlan('base',49,1,10,2)" class="plan-card" style="background:var(--card2);border:2px solid var(--border);border-radius:9px;padding:12px;cursor:pointer;transition:all .15s;">
+        <div style="font-size:13px;font-weight:700;color:var(--y);">Base Plan — ₹49</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:4px;">1 Task + 10 Min + 2 KM</div>
+      </div>
+      <div onclick="selectPlan('topup_task',25,1,0,0)" class="plan-card" style="background:var(--card2);border:2px solid var(--border);border-radius:9px;padding:12px;cursor:pointer;">
+        <div style="font-size:13px;font-weight:700;color:var(--ok);">Task Top-up — ₹25</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:4px;">+1 Extra Task</div>
+      </div>
+      <div onclick="selectPlan('topup_time',10,0,10,0)" class="plan-card" style="background:var(--card2);border:2px solid var(--border);border-radius:9px;padding:12px;cursor:pointer;">
+        <div style="font-size:13px;font-weight:700;color:var(--info);">Time Top-up — ₹10</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:4px;">+10 Extra Minutes</div>
+      </div>
+      <div onclick="selectPlan('topup_km',10,0,0,1)" class="plan-card" style="background:var(--card2);border:2px solid var(--border);border-radius:9px;padding:12px;cursor:pointer;">
+        <div style="font-size:13px;font-weight:700;color:var(--warn);">KM Top-up — ₹10</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:4px;">+1 Extra KM</div>
+      </div>
+    </div>
+  </div>
+
+  <form method="post">{% csrf_token %}
+    <div class="fg"><label>Recharge Type</label>
+      <select name="recharge_type" id="recharge_type">
+        <option value="base">Base Plan ₹49</option>
+        <option value="topup_task">Task Top-up ₹25/task</option>
+        <option value="topup_time">Time Top-up ₹1/min</option>
+        <option value="topup_km">Distance Top-up ₹10/km</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Amount Paid (₹)</label><input type="number" name="amount_paid" id="amount_paid" step="0.01" required></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Tasks Added</label><input type="number" name="tasks_added" id="tasks_added" value="0" min="0"></div>
+      <div class="fg"><label>Minutes Added</label><input type="number" name="minutes_added" id="minutes_added" value="0" min="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>KM Added</label><input type="number" name="km_added" id="km_added" value="0" step="0.1" min="0"></div>
+      <div class="fg"><label>Note</label><input type="text" name="note"></div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button type="submit" class="btn btn-y"><i class="fa-solid fa-bolt"></i> Add Recharge</button>
+      <a href="{% url 'customer_wallet_detail' wallet.pk %}" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+function selectPlan(type, amount, tasks, minutes, km){
+  document.getElementById('recharge_type').value = type;
+  document.getElementById('amount_paid').value = amount;
+  document.getElementById('tasks_added').value = tasks;
+  document.getElementById('minutes_added').value = minutes;
+  document.getElementById('km_added').value = km;
+  document.querySelectorAll('.plan-card').forEach(c=>{
+    c.style.borderColor='var(--border)';
+  });
+  event.currentTarget.style.borderColor='var(--y)';
+}
+</script>
+{% endblock %}
