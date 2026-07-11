@@ -20,23 +20,23 @@
     </div>
   </div>
 
-  <!-- Recharge Plans Quick Select -->
+  <!-- Quick Plans -->
   <div style="margin-bottom:16px;">
     <div style="font-size:11px;color:var(--y);text-transform:uppercase;margin-bottom:8px;">Quick Recharge Plans</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <div onclick="selectPlan('base',49,1,10,2)" class="plan-card" style="background:var(--card2);border:2px solid var(--border);border-radius:9px;padding:12px;cursor:pointer;transition:all .15s;">
+      <div onclick="selectPlan('base',49,1,10,2)" class="plan-card" style="background:var(--card2);border:2px solid var(--b);border-radius:9px;padding:12px;cursor:pointer;">
         <div style="font-size:13px;font-weight:700;color:var(--y);">Base Plan — ₹49</div>
         <div style="font-size:12px;color:var(--t2);margin-top:4px;">1 Task + 10 Min + 2 KM</div>
       </div>
-      <div onclick="selectPlan('topup_task',25,1,0,0)" class="plan-card" style="background:var(--card2);border:2px solid var(--border);border-radius:9px;padding:12px;cursor:pointer;">
+      <div onclick="selectPlan('topup_task',25,1,0,0)" class="plan-card" style="background:var(--card2);border:2px solid var(--b);border-radius:9px;padding:12px;cursor:pointer;">
         <div style="font-size:13px;font-weight:700;color:var(--ok);">Task Top-up — ₹25</div>
         <div style="font-size:12px;color:var(--t2);margin-top:4px;">+1 Extra Task</div>
       </div>
-      <div onclick="selectPlan('topup_time',10,0,10,0)" class="plan-card" style="background:var(--card2);border:2px solid var(--border);border-radius:9px;padding:12px;cursor:pointer;">
+      <div onclick="selectPlan('topup_time',10,0,10,0)" class="plan-card" style="background:var(--card2);border:2px solid var(--b);border-radius:9px;padding:12px;cursor:pointer;">
         <div style="font-size:13px;font-weight:700;color:var(--info);">Time Top-up — ₹10</div>
         <div style="font-size:12px;color:var(--t2);margin-top:4px;">+10 Extra Minutes</div>
       </div>
-      <div onclick="selectPlan('topup_km',10,0,0,1)" class="plan-card" style="background:var(--card2);border:2px solid var(--border);border-radius:9px;padding:12px;cursor:pointer;">
+      <div onclick="selectPlan('topup_km',10,0,0,1)" class="plan-card" style="background:var(--card2);border:2px solid var(--b);border-radius:9px;padding:12px;cursor:pointer;">
         <div style="font-size:13px;font-weight:700;color:var(--warn);">KM Top-up — ₹10</div>
         <div style="font-size:12px;color:var(--t2);margin-top:4px;">+1 Extra KM</div>
       </div>
@@ -45,17 +45,15 @@
 
   <form method="post">{% csrf_token %}
     <input type="hidden" name="recharge_type" id="recharge_type" value="base">
-    <div class="form-row">
-      <div class="fg"><label>Amount Paid (₹)</label><input type="number" name="amount_paid" id="amount_paid" step="0.01" required></div>
-      <div class="fg">
+
+    <div class="fg">
       <label>Amount Paid (₹)</label>
-      <input type="number" name="amount_paid" id="amount_paid"
-        step="1" min="0" oninput="autoCalculate()" required>
+      <input type="number" name="amount_paid" id="amount_paid" step="1" min="0" oninput="autoCalculate()" required>
     </div>
 
-    <!-- Breakdown Info -->
-    <div id="breakdownInfo" style="background:var(--card2);border:1px solid var(--by);border-radius:8px;padding:10px 14px;margin-bottom:14px;min-height:32px;font-size:12px;"></div>
-    </div>
+    <!-- Live Breakdown -->
+    <div id="breakdownInfo" style="display:none;background:var(--card2);border:1px solid var(--by);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;"></div>
+
     <div class="form-row">
       <div class="fg"><label>Tasks Added</label><input type="number" name="tasks_added" id="tasks_added" value="0" min="0"></div>
       <div class="fg"><label>Minutes Added</label><input type="number" name="minutes_added" id="minutes_added" value="0" min="0"></div>
@@ -64,7 +62,8 @@
       <div class="fg"><label>KM Added</label><input type="number" name="km_added" id="km_added" value="0" step="0.1" min="0"></div>
       <div class="fg"><label>Note</label><input type="text" name="note"></div>
     </div>
-    <div style="display:flex;gap:10px;">
+
+    <div style="display:flex;gap:10px;margin-top:10px;">
       <button type="submit" class="btn btn-y"><i class="fa-solid fa-bolt"></i> Add Recharge</button>
       <a href="{% url 'customer_wallet_detail' wallet.pk %}" class="btn btn-ghost">Cancel</a>
     </div>
@@ -78,67 +77,45 @@ function selectPlan(type, amount, tasks, minutes, km){
   document.getElementById('tasks_added').value = tasks;
   document.getElementById('minutes_added').value = minutes;
   document.getElementById('km_added').value = km;
-  document.querySelectorAll('.plan-card').forEach(c=>{
-    c.style.borderColor='var(--b)';
-  });
+  document.querySelectorAll('.plan-card').forEach(c=>c.style.borderColor='var(--b)');
   event.currentTarget.style.borderColor='var(--y)';
+  autoCalculate();
 }
 
 function autoCalculate(){
   const amount = parseFloat(document.getElementById('amount_paid').value) || 0;
-
-  // Reset
   let tasks = 0, minutes = 0, km = 0;
   let remaining = amount;
+  let html = '';
 
-  // Step 1: Base Plan ₹49 = 1T + 10M + 2KM
   if(remaining >= 49){
-    tasks += 1;
-    minutes += 10;
-    km += 2;
-    remaining -= 49;
+    tasks += 1; minutes += 10; km += 2; remaining -= 49;
+    html += `<div style="color:var(--ok);">✓ Base Plan ₹49 → 1 Task + 10 Min + 2 KM</div>`;
   }
-
-  // Step 2: Extra amount distribute
-  // Extra Task ₹25
   const extraTasks = Math.floor(remaining / 25);
   if(extraTasks > 0){
-    tasks += extraTasks;
-    remaining -= extraTasks * 25;
+    tasks += extraTasks; remaining -= extraTasks * 25;
+    html += `<div style="color:var(--info);margin-top:3px;">+ ${extraTasks} Extra Task(s) @ ₹25 each</div>`;
   }
-
-  // Extra Minutes ₹1/min
-  const extraMinutes = Math.floor(remaining / 1);
-  if(extraMinutes > 0){
-    minutes += extraMinutes;
-    remaining -= extraMinutes * 1;
+  const extraMin = Math.floor(remaining / 1);
+  if(extraMin > 0){
+    minutes += extraMin; remaining -= extraMin;
+    html += `<div style="color:var(--info);margin-top:3px;">+ ${extraMin} Extra Min @ ₹1 each</div>`;
+  }
+  if(remaining > 0 && amount > 0){
+    html += `<div style="color:var(--warn);margin-top:3px;">₹${remaining.toFixed(0)} remaining (not enough for next unit)</div>`;
+  }
+  if(amount > 0 && amount < 49){
+    html = `<div style="color:var(--warn);">⚠ Amount less than Base Plan ₹49</div>`;
   }
 
   document.getElementById('tasks_added').value = tasks;
   document.getElementById('minutes_added').value = minutes;
   document.getElementById('km_added').value = km.toFixed(2);
 
-  // Show breakdown
-  updateBreakdown(amount, tasks, minutes, km, remaining);
-}
-
-function updateBreakdown(amount, tasks, minutes, km, leftover){
-  let html = '';
-  if(amount >= 49){
-    html += `<div style="color:var(--ok);font-size:12px;">✓ Base Plan ₹49 → ${tasks >= 1 ? '1 Task' : ''} + ${minutes >= 10 ? '10 Min' : ''} + ${km >= 2 ? '2 KM' : ''}</div>`;
-  }
-  const extraAmt = amount - 49;
-  if(extraAmt > 0 && amount >= 49){
-    html += `<div style="color:var(--info);font-size:12px;margin-top:4px;">Extra ₹${extraAmt.toFixed(0)} → +${Math.floor(extraAmt/25)} tasks, +${Math.floor((extraAmt%25)/1)} min</div>`;
-  }
-  if(leftover > 0){
-    html += `<div style="color:var(--warn);font-size:12px;margin-top:4px;">₹${leftover.toFixed(0)} remaining (not enough for next unit)</div>`;
-  }
-  if(amount < 49){
-    html += `<div style="color:var(--warn);font-size:12px;">Amount less than Base Plan ₹49 — no recharge applied</div>`;
-  }
   const el = document.getElementById('breakdownInfo');
-  if(el) el.innerHTML = html;
+  el.innerHTML = html;
+  el.style.display = amount > 0 ? 'block' : 'none';
 }
 </script>
 {% endblock %}
