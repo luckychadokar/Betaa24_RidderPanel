@@ -9,6 +9,7 @@ import openpyxl
 from io import BytesIO
 from .models import Task, calculate_earnings, CustomerWallet, CustomerRecharge
 from .forms import TaskForm, CustomerWalletForm, CustomerRechargeForm
+from django.http import HttpResponse, JsonResponse
 
 
 @login_required
@@ -174,28 +175,31 @@ def customer_wallet_add(request):
 @login_required
 def customer_recharge(request, pk):
     wallet = get_object_or_404(CustomerWallet, pk=pk)
-    form = CustomerRechargeForm(request.POST or None)
 
-    # Auto-calculate based on recharge type
-    if form.is_valid():
-        recharge = form.save(commit=False)
-        recharge.wallet = wallet
+    if request.method == 'POST':
+        from decimal import Decimal
+        tasks_added = int(request.POST.get('tasks_added', 0))
+        minutes_added = int(request.POST.get('minutes_added', 0))
+        km_added = Decimal(str(request.POST.get('km_added', 0)))
+        amount_paid = Decimal(str(request.POST.get('amount_paid', 0)))
+        note = request.POST.get('note', '')
 
-        # Auto-fill if base plan
-        if recharge.recharge_type == 'base':
-            recharge.amount_paid = 49
-            recharge.tasks_added = 1
-            recharge.minutes_added = 10
-            recharge.km_added = 2
-
+        recharge = CustomerRecharge(
+            wallet=wallet,
+            recharge_type='manual',
+            amount_paid=amount_paid,
+            tasks_added=tasks_added,
+            minutes_added=minutes_added,
+            km_added=km_added,
+            note=note,
+        )
         recharge.save()
-        messages.success(request, 'Recharge added successfully!')
+        messages.success(request, f'Recharge added! Tasks: +{tasks_added}, Min: +{minutes_added}, KM: +{km_added}')
         return redirect('customer_wallet_detail', pk=pk)
 
     return render(request, 'tasks/customer_recharge_form.html', {
-        'form': form, 'wallet': wallet
+        'wallet': wallet
     })
-
 
 @login_required
 def customer_wallet_api(request):

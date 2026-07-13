@@ -1,15 +1,104 @@
 {% extends 'base.html' %}
-{% block page_title %}{{ title }}{% endblock %}
+{% block page_title %}Recharge - {{ wallet.customer_name }}{% endblock %}
 {% block content %}
-<div class="card" style="max-width:500px;">
-  <div class="card-title" style="margin-bottom:16px;">{{ title }}</div>
+<div class="card" style="max-width:600px;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+    <div class="rav rav-lg">{{ wallet.customer_name|first }}</div>
+    <div>
+      <div style="font-size:16px;font-weight:800;">{{ wallet.customer_name }}</div>
+      <div style="font-size:12px;color:var(--t2);">{{ wallet.customer_mobile }}</div>
+    </div>
+  </div>
+
+  <!-- Current Balance -->
+  <div style="background:var(--card2);border:1px solid var(--by);border-radius:10px;padding:14px;margin-bottom:16px;">
+    <div style="font-size:11px;color:var(--y);text-transform:uppercase;margin-bottom:8px;">Current Balance</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;">
+      <div>
+        <div style="font-size:22px;font-weight:800;color:{% if wallet.available_tasks < 0 %}var(--err){% else %}var(--ok){% endif %};">{{ wallet.available_tasks }}</div>
+        <div style="font-size:11px;color:var(--t2);">Tasks{% if wallet.available_tasks < 0 %} (Deficit){% endif %}</div>
+      </div>
+      <div>
+        <div style="font-size:22px;font-weight:800;color:{% if wallet.available_minutes < 0 %}var(--err){% else %}var(--info){% endif %};">{{ wallet.available_minutes }}</div>
+        <div style="font-size:11px;color:var(--t2);">Minutes{% if wallet.available_minutes < 0 %} (Deficit){% endif %}</div>
+      </div>
+      <div>
+        <div style="font-size:22px;font-weight:800;color:{% if wallet.available_km < 0 %}var(--err){% else %}var(--warn){% endif %};">{{ wallet.available_km }}</div>
+        <div style="font-size:11px;color:var(--t2);">KM{% if wallet.available_km < 0 %} (Deficit){% endif %}</div>
+      </div>
+    </div>
+    {% if wallet.pending_amount > 0 %}
+    <div style="margin-top:10px;padding:8px;background:var(--err-b);border-radius:7px;text-align:center;">
+      <span style="color:var(--err);font-weight:700;font-size:13px;">Pending Amount: ₹{{ wallet.pending_amount }}</span>
+    </div>
+    {% endif %}
+  </div>
+
   <form method="post">{% csrf_token %}
-    <div class="fg"><label>Customer Name</label><input type="text" name="customer_name" required></div>
-    <div class="fg"><label>Mobile Number</label><input type="text" name="customer_mobile" maxlength="10" required></div>
-    <div style="display:flex;gap:10px;">
-      <button type="submit" class="btn btn-y">Save & Add Recharge</button>
-      <a href="{% url 'customer_wallet_list' %}" class="btn btn-ghost">Cancel</a>
+    <div style="font-size:11px;color:var(--y);text-transform:uppercase;margin-bottom:10px;">Add Recharge (Manual)</div>
+
+    <div class="form-row">
+      <div class="fg">
+        <label>Tasks <span style="color:var(--t2);font-size:10px;">@ ₹25/task</span></label>
+        <input type="number" name="tasks_added" id="tasks_added" value="0" min="0" oninput="calcAmount()">
+      </div>
+      <div class="fg">
+        <label>Minutes <span style="color:var(--t2);font-size:10px;">@ ₹1/min</span></label>
+        <input type="number" name="minutes_added" id="minutes_added" value="0" min="0" oninput="calcAmount()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fg">
+        <label>KM <span style="color:var(--t2);font-size:10px;">@ ₹10/km</span></label>
+        <input type="number" name="km_added" id="km_added" value="0" step="0.1" min="0" oninput="calcAmount()">
+      </div>
+      <div class="fg">
+        <label>Amount Paid (₹)</label>
+        <input type="number" name="amount_paid" id="amount_paid" value="0" step="0.01">
+      </div>
+    </div>
+
+    <!-- Auto calculated amount -->
+    <div id="amountBox" style="display:none;background:linear-gradient(135deg,#151200,#1a1800);border:1px solid var(--by);border-radius:8px;padding:12px;margin-bottom:14px;">
+      <div style="font-size:11px;color:var(--y);text-transform:uppercase;margin-bottom:8px;">Calculated Amount</div>
+      <div id="amountBreakdown" style="font-size:12px;color:var(--t2);"></div>
+      <div style="font-size:18px;font-weight:800;color:var(--y);margin-top:6px;">Total: ₹<span id="totalAmt">0</span></div>
+    </div>
+
+    <div class="fg">
+      <label>Note (optional)</label>
+      <input type="text" name="note" placeholder="e.g. Base plan + extra tasks">
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:10px;">
+      <button type="submit" class="btn btn-y"><i class="fa-solid fa-bolt"></i> Add Recharge</button>
+      <a href="{% url 'customer_wallet_detail' wallet.pk %}" class="btn btn-ghost">Cancel</a>
     </div>
   </form>
 </div>
+
+<script>
+function calcAmount(){
+  const tasks = parseInt(document.getElementById('tasks_added').value) || 0;
+  const minutes = parseInt(document.getElementById('minutes_added').value) || 0;
+  const km = parseFloat(document.getElementById('km_added').value) || 0;
+
+  const taskAmt = tasks * 25;
+  const minAmt = minutes * 1;
+  const kmAmt = km * 10;
+  const total = taskAmt + minAmt + kmAmt;
+
+  let breakdown = '';
+  if(tasks > 0) breakdown += `<div>${tasks} Tasks × ₹25 = ₹${taskAmt}</div>`;
+  if(minutes > 0) breakdown += `<div>${minutes} Min × ₹1 = ₹${minAmt}</div>`;
+  if(km > 0) breakdown += `<div>${km} KM × ₹10 = ₹${kmAmt}</div>`;
+
+  document.getElementById('amountBreakdown').innerHTML = breakdown;
+  document.getElementById('totalAmt').textContent = total.toFixed(2);
+  document.getElementById('amount_paid').value = total.toFixed(2);
+
+  const box = document.getElementById('amountBox');
+  box.style.display = (tasks > 0 || minutes > 0 || km > 0) ? 'block' : 'none';
+}
+</script>
 {% endblock %}

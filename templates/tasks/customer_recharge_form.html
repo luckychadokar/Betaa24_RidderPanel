@@ -109,6 +109,17 @@ function autoCalculate(){
     html = `<div style="color:var(--warn);">⚠ Amount less than Base Plan ₹49</div>`;
   }
 
+  // Update recharge type based on what's filled
+  if(tasks > 0 && minutes > 0 && km > 0){
+    document.getElementById('recharge_type').value = 'base';
+  } else if(tasks > 0 && minutes === 0){
+    document.getElementById('recharge_type').value = 'topup_task';
+  } else if(minutes > 0 && tasks === 0){
+    document.getElementById('recharge_type').value = 'topup_time';
+  } else {
+    document.getElementById('recharge_type').value = 'custom';
+  }
+
   document.getElementById('tasks_added').value = tasks;
   document.getElementById('minutes_added').value = minutes;
   document.getElementById('km_added').value = km.toFixed(2);

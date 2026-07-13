@@ -21,16 +21,21 @@ def calculate_earnings(num_tasks, time_minutes, distance_km):
 class CustomerWallet(models.Model):
     customer_name = models.CharField(max_length=100)
     customer_mobile = models.CharField(max_length=15, unique=True)
-    available_tasks = models.PositiveIntegerField(default=0)
-    available_minutes = models.PositiveIntegerField(default=0)
+    available_tasks = models.IntegerField(default=0)      # Int (minus ho sakta hai)
+    available_minutes = models.IntegerField(default=0)    # Int (minus ho sakta hai)
     available_km = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     total_recharged = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_spent = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    pending_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.customer_name} ({self.customer_mobile})"
+
+    @property
+    def is_in_deficit(self):
+        return self.available_tasks < 0 or self.available_minutes < 0 or self.available_km < 0
 
     class Meta:
         ordering = ['-created_at']
@@ -38,29 +43,55 @@ class CustomerWallet(models.Model):
 
 class CustomerRecharge(models.Model):
     RECHARGE_TYPES = [
+        ('manual', 'Manual Recharge'),
         ('base', 'Base Plan Rs.49'),
-        ('topup_task', 'Task Top-up Rs.25/task'),
-        ('topup_time', 'Time Top-up Rs.1/min'),
-        ('topup_km', 'Distance Top-up Rs.10/km'),
+        ('topup_task', 'Task Top-up'),
+        ('topup_time', 'Time Top-up'),
+        ('topup_km', 'KM Top-up'),
+        ('custom', 'Custom Recharge'),
     ]
     wallet = models.ForeignKey(
         CustomerWallet, on_delete=models.CASCADE, related_name='recharges')
-    recharge_type = models.CharField(max_length=20, choices=RECHARGE_TYPES)
-    amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
-    tasks_added = models.PositiveIntegerField(default=0)
-    minutes_added = models.PositiveIntegerField(default=0)
+    recharge_type = models.CharField(max_length=20, choices=RECHARGE_TYPES, default='manual')
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    tasks_added = models.IntegerField(default=0)
+    minutes_added = models.IntegerField(default=0)
     km_added = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     note = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
+        is_new = self.pk is None
         super().save(*args, **kwargs)
-        self.wallet.available_tasks += self.tasks_added
-        self.wallet.available_minutes += self.minutes_added
-        self.wallet.available_km += self.km_added
-        self.wallet.total_recharged += self.amount_paid
-        self.wallet.save()
+        if is_new:
+            self.wallet.available_tasks += self.tasks_added
+            self.wallet.available_minutes += self.minutes_added
+            self.wallet.available_km += self.km_added
+            self.wallet.total_recharged += self.amount_paid
+            self.wallet.save()
 
+    def __str__(self):
+        return f"{self.wallet.customer_name} - {self.get_recharge_type_display()}"
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new:
+            # Only add to wallet on first save
+            self.wallet.available_tasks += self.tasks_added
+            self.wallet.available_minutes += self.minutes_added
+            self.wallet.available_km += self.km_added
+            self.wallet.total_recharged += self.amount_paid
+            self.wallet.save()
+
+    def __str__(self):
+        return f"{self.wallet.customer_name} - {self.get_recharge_type_display()}"
+
+    class Meta:
+        ordering = ['-created_at']
     def __str__(self):
         return f"{self.wallet.customer_name} - {self.get_recharge_type_display()}"
 
@@ -122,10 +153,19 @@ class Task(models.Model):
         super().save(*args, **kwargs)
         if self.status == 'completed' and self.customer_wallet:
             w = self.customer_wallet
-            w.available_tasks = max(0, w.available_tasks - self.num_tasks)
-            w.available_minutes = max(0, w.available_minutes - self.time_taken)
-            w.available_km = max(0, w.available_km - self.distance_km)
+            w.available_tasks -= self.num_tasks
+            w.available_minutes -= self.time_taken
+            w.available_km -= self.distance_km
             w.total_spent += self.earnings
+            # Pending amount calculate karo agar minus mein gaya
+            pending = 0
+            if w.available_tasks < 0:
+                pending += abs(w.available_tasks) * 25
+            if w.available_minutes < 0:
+                pending += abs(w.available_minutes) * 1
+            if w.available_km < 0:
+                pending += abs(float(w.available_km)) * 10
+            w.pending_amount = pending
             w.save()
         if self.status == 'completed' and self.rider and self.earnings > 0:
             from riders.models import WalletTransaction

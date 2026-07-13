@@ -2,53 +2,120 @@
 {% block page_title %}{{ wallet.customer_name }}{% endblock %}
 {% block content %}
 <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-bottom:18px;">
+
+  <!-- Left Card — Customer Info + Balance -->
   <div class="card">
     <div style="font-size:16px;font-weight:800;margin-bottom:4px;">{{ wallet.customer_name }}</div>
     <div style="font-size:12px;color:var(--t2);margin-bottom:16px;">{{ wallet.customer_mobile }}</div>
+
+    <!-- Available Balance -->
     <div style="background:var(--card2);border:1px solid var(--by);border-radius:10px;padding:14px;margin-bottom:12px;">
       <div style="font-size:10px;color:var(--y);text-transform:uppercase;margin-bottom:10px;">Available Balance</div>
-      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--b);font-size:13px;"><span style="color:var(--t2);">Tasks</span><span style="color:var(--ok);font-weight:800;">{{ wallet.available_tasks }}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--b);font-size:13px;"><span style="color:var(--t2);">Minutes</span><span style="color:var(--info);font-weight:800;">{{ wallet.available_minutes }}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;"><span style="color:var(--t2);">KM</span><span style="color:var(--warn);font-weight:800;">{{ wallet.available_km }}</span></div>
+
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--b);font-size:13px;">
+        <span style="color:var(--t2);">Tasks</span>
+        <span style="color:{% if wallet.available_tasks < 0 %}var(--err){% else %}var(--ok){% endif %};font-weight:800;">
+          {{ wallet.available_tasks }}{% if wallet.available_tasks < 0 %} ⚠{% endif %}
+        </span>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--b);font-size:13px;">
+        <span style="color:var(--t2);">Minutes</span>
+        <span style="color:{% if wallet.available_minutes < 0 %}var(--err){% else %}var(--info){% endif %};font-weight:800;">
+          {{ wallet.available_minutes }}{% if wallet.available_minutes < 0 %} ⚠{% endif %}
+        </span>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
+        <span style="color:var(--t2);">KM</span>
+        <span style="color:{% if wallet.available_km < 0 %}var(--err){% else %}var(--warn){% endif %};font-weight:800;">
+          {{ wallet.available_km }}{% if wallet.available_km < 0 %} ⚠{% endif %}
+        </span>
+      </div>
     </div>
-    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span style="color:var(--t2);">Total Recharged</span><span class="text-g fw7">&#8377;{{ wallet.total_recharged }}</span></div>
-    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:14px;"><span style="color:var(--t2);">Total Spent</span><span class="text-r fw7">&#8377;{{ wallet.total_spent }}</span></div>
-    <a href="{% url 'customer_recharge' wallet.pk %}" class="btn btn-y" style="width:100%;justify-content:center;"><i class="fa-solid fa-bolt"></i> Add Recharge</a>
+
+    <!-- Pending Amount Box -->
+    {% if wallet.pending_amount > 0 %}
+    <div style="background:var(--err-b);border:1px solid rgba(239,68,68,.3);border-radius:9px;padding:12px;margin-bottom:12px;text-align:center;">
+      <div style="font-size:10px;color:var(--err);text-transform:uppercase;margin-bottom:4px;">Pending Amount</div>
+      <div style="font-size:22px;font-weight:800;color:var(--err);">&#8377;{{ wallet.pending_amount }}</div>
+      <div style="font-size:11px;color:var(--t2);margin-top:4px;">Customer ne extra use kiya — recharge required</div>
+    </div>
+    {% endif %}
+
+    <!-- Summary -->
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
+      <span style="color:var(--t2);">Total Recharged</span>
+      <span class="text-g fw7">&#8377;{{ wallet.total_recharged }}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:14px;">
+      <span style="color:var(--t2);">Total Spent</span>
+      <span class="text-r fw7">&#8377;{{ wallet.total_spent }}</span>
+    </div>
+
+    <a href="{% url 'customer_recharge' wallet.pk %}" class="btn btn-y" style="width:100%;justify-content:center;">
+      <i class="fa-solid fa-bolt"></i> Add Recharge
+    </a>
   </div>
+
+  <!-- Right — Recharge History -->
   <div class="tbl-wrap" style="margin-bottom:0;">
     <div class="tbl-hd"><div class="card-title">Recharge History</div></div>
-    <table><thead><tr><th>Type</th><th>Amount</th><th>Tasks</th><th>Minutes</th><th>KM</th><th>Date</th></tr></thead>
-    <tbody>{% for r in recharges %}
-    <tr>
-      <td>{{ r.get_recharge_type_display }}</td>
-      <td class="text-g fw7">&#8377;{{ r.amount_paid }}</td>
-      <td>{{ r.tasks_added }}</td>
-      <td>{{ r.minutes_added }}</td>
-      <td>{{ r.km_added }}</td>
-      <td style="color:var(--t2);">{{ r.created_at|date:"d M Y" }}</td>
-    </tr>
-    {% empty %}<tr><td colspan="6" style="text-align:center;color:var(--t2);padding:18px;">No recharges yet</td></tr>
-    {% endfor %}</tbody>
+    <table>
+      <thead><tr><th>Type</th><th>Amount</th><th>Tasks</th><th>Minutes</th><th>KM</th><th>Note</th><th>Date</th></tr></thead>
+      <tbody>
+      {% for r in recharges %}
+      <tr>
+        <td>{{ r.get_recharge_type_display }}</td>
+        <td class="text-g fw7">&#8377;{{ r.amount_paid }}</td>
+        <td style="color:var(--ok);">+{{ r.tasks_added }}</td>
+        <td style="color:var(--info);">+{{ r.minutes_added }}</td>
+        <td style="color:var(--warn);">+{{ r.km_added }}</td>
+        <td style="color:var(--t2);font-size:12px;">{{ r.note|default:"-" }}</td>
+        <td style="color:var(--t2);">{{ r.created_at|date:"d M Y" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" style="text-align:center;color:var(--t2);padding:18px;">No recharges yet</td></tr>
+      {% endfor %}
+      </tbody>
     </table>
   </div>
 </div>
 
-<!-- Tasks -->
+<!-- Task History -->
 <div class="tbl-wrap">
-  <div class="tbl-hd"><div class="card-title">Task History</div></div>
-  <table><thead><tr><th>Task ID</th><th>Date</th><th>Tasks</th><th>Time</th><th>KM</th><th>Amount</th><th>Status</th></tr></thead>
-  <tbody>{% for t in tasks %}
-  <tr>
-    <td class="text-y fw7">{{ t.task_id }}</td>
-    <td>{{ t.task_date }}</td>
-    <td>{{ t.num_tasks }}</td>
-    <td>{{ t.time_taken }}m</td>
-    <td>{{ t.distance_km }}km</td>
-    <td class="text-r fw7">&#8377;{{ t.earnings }}</td>
-    <td><span class="badge {% if t.status == 'completed' %}b-g{% elif t.status == 'cancelled' %}b-r{% else %}b-w{% endif %}">{{ t.status|title }}</span></td>
-  </tr>
-  {% empty %}<tr><td colspan="7" style="text-align:center;color:var(--t2);padding:18px;">No tasks yet</td></tr>
-  {% endfor %}</tbody>
+  <div class="tbl-hd"><div class="card-title">Task History (Deductions)</div></div>
+  <table>
+    <thead>
+      <tr>
+        <th>Task ID</th>
+        <th>Date</th>
+        <th>Tasks Used</th>
+        <th>Time Used</th>
+        <th>KM Used</th>
+        <th>Rider Earnings</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for t in tasks %}
+    <tr>
+      <td class="text-y fw7">{{ t.task_id }}</td>
+      <td>{{ t.task_date }}</td>
+      <td style="color:var(--err);font-weight:700;">-{{ t.num_tasks }}</td>
+      <td style="color:var(--err);font-weight:700;">-{{ t.time_taken }}m</td>
+      <td style="color:var(--err);font-weight:700;">-{{ t.distance_km }}km</td>
+      <td class="text-g fw7">&#8377;{{ t.earnings }}</td>
+      <td>
+        <span class="badge {% if t.status == 'completed' %}b-g{% elif t.status == 'cancelled' %}b-r{% else %}b-w{% endif %}">
+          {{ t.status|title }}
+        </span>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" style="text-align:center;color:var(--t2);padding:18px;">No tasks yet</td></tr>
+    {% endfor %}
+    </tbody>
   </table>
 </div>
 {% endblock %}
