@@ -80,13 +80,20 @@ class CustomerRecharge(models.Model):
         is_new = self.pk is None
         super().save(*args, **kwargs)
         if is_new:
-            # Only add to wallet on first save
             self.wallet.available_tasks += self.tasks_added
             self.wallet.available_minutes += self.minutes_added
             self.wallet.available_km += self.km_added
-            self.wallet.total_recharged += self.amount_paid
+            # Recalculate pending after recharge
+            pending = 0
+            if self.wallet.available_tasks < 0:
+                pending += abs(self.wallet.available_tasks) * 25
+            if self.wallet.available_minutes < 0:
+                pending += abs(self.wallet.available_minutes) * 1
+            if self.wallet.available_km < 0:
+                pending += abs(float(self.wallet.available_km)) * 10
+            self.wallet.pending_amount = pending
             self.wallet.save()
-
+            
     def __str__(self):
         return f"{self.wallet.customer_name} - {self.get_recharge_type_display()}"
 

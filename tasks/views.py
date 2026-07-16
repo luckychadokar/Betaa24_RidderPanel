@@ -180,26 +180,25 @@ def customer_recharge(request, pk):
         from decimal import Decimal
         tasks_added = int(request.POST.get('tasks_added', 0))
         minutes_added = int(request.POST.get('minutes_added', 0))
-        km_added = Decimal(str(request.POST.get('km_added', 0)))
-        amount_paid = Decimal(str(request.POST.get('amount_paid', 0)))
+        km_added = Decimal(str(request.POST.get('km_added', 0) or 0))
         note = request.POST.get('note', '')
 
-        recharge = CustomerRecharge(
+        CustomerRecharge.objects.create(
             wallet=wallet,
             recharge_type='manual',
-            amount_paid=amount_paid,
+            amount_paid=0,
             tasks_added=tasks_added,
             minutes_added=minutes_added,
             km_added=km_added,
             note=note,
         )
-        recharge.save()
-        messages.success(request, f'Recharge added! Tasks: +{tasks_added}, Min: +{minutes_added}, KM: +{km_added}')
+        messages.success(
+            request,
+            f'Recharge added! +{tasks_added} Tasks, +{minutes_added} Min, +{km_added} KM'
+        )
         return redirect('customer_wallet_detail', pk=pk)
 
-    return render(request, 'tasks/customer_recharge_form.html', {
-        'wallet': wallet
-    })
+    return render(request, 'tasks/customer_recharge_form.html', {'wallet': wallet})
 
 @login_required
 def customer_wallet_api(request):
