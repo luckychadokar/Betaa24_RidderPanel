@@ -96,21 +96,13 @@ tr:hover td{background:rgba(255,255,255,.015);}
     <div class="sb-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
       <a href="{% url 'dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
     </div>
-    <div class="sb-item {% if 'rider' in request.resolver_match.url_name|default:'' %}active{% endif %}">
-      <a href="{% url 'rider_list' %}"><i class="fa-solid fa-person-biking"></i> Riders</a>
+    <div class="sb-item">
+      <a href="{% url 'rider_list' %}"><i class="fa-solid fa-person-biking"></i> All Riders</a>
     </div>
     <div class="sb-item {% if 'task' in request.resolver_match.url_name|default:'' %}active{% endif %}">
       <a href="{% url 'task_list' %}"><i class="fa-solid fa-box"></i> Tasks</a>
     </div>
-    <div class="sb-sec">Riders Status</div>
-    <div class="sb-item">
-      <div class="sb-item">
-      <a href="{% url 'training_records' %}"><i class="fa-solid fa-clipboard-list"></i> Training Records</a>
-    </div>
-    </div>
-    <div class="sb-item">
-      <a href="{% url 'rider_list' %}?status=documents_pending"><i class="fa-solid fa-file-circle-exclamation"></i> Documents Pending</a>
-    </div>
+
     <div class="sb-sec">Riders Flow</div>
     <div class="sb-item">
       <a href="{% url 'rider_list' %}?status=training_pending">
@@ -132,10 +124,12 @@ tr:hover td{background:rgba(255,255,255,.015);}
         <i class="fa-solid fa-circle-check"></i> Active Riders
       </a>
     </div>
+
     <div class="sb-sec">Finance</div>
     <div class="sb-item {% if 'payout' in request.resolver_match.url_name|default:'' %}active{% endif %}">
       <a href="{% url 'payout_list' %}"><i class="fa-solid fa-money-bill-transfer"></i> Payouts</a>
     </div>
+
     <div class="sb-sec">Reports</div>
     <div class="sb-item">
       <a href="{% url 'cancelled_tasks' %}"><i class="fa-solid fa-ban"></i> Cancelled Tasks</a>
@@ -147,19 +141,23 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <a href="{% url 'excel_import' %}"><i class="fa-solid fa-file-import"></i> Import Excel</a>
     </div>
     <div class="sb-item">
+      <a href="{% url 'beta24_app_import' %}"><i class="fa-solid fa-mobile-screen"></i> Import Beta24 App</a>
+    </div>
+    <div class="sb-item">
       <a href="{% url 'excel_export' %}"><i class="fa-solid fa-file-export"></i> Export Riders</a>
     </div>
+
     <div class="sb-sec">System</div>
     <div class="sb-item">
       <a href="/admin/"><i class="fa-solid fa-shield-halved"></i> Django Admin</a>
     </div>
     <div class="sb-item">
-      <form method="post" action="{% url 'logout' %}" style="display:inline;">
-  {% csrf_token %}
-  <button type="submit" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:0;color:inherit;font-size:13px;width:100%;">
-    <i class="fa-solid fa-right-from-bracket" style="width:16px;text-align:center;"></i> Logout
-  </button>
-</form>
+      <form method="post" action="{% url 'logout' %}" style="display:inline;width:100%;">
+        {% csrf_token %}
+        <button type="submit" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 16px;color:var(--t2);font-size:13px;width:100%;">
+          <i class="fa-solid fa-right-from-bracket" style="width:16px;text-align:center;"></i> Logout
+        </button>
+      </form>
     </div>
   </nav>
   <div class="sb-foot">
