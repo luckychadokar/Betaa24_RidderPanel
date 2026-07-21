@@ -14,4 +14,5 @@ urlpatterns = [
     path('ifsc-lookup/', views.ifsc_lookup, name='ifsc_lookup'),
     path('training-records/', views.training_records, name='training_records'),
     path('training-import/', views.training_import, name='training_import'),
+    path('beta24-app-import/', views.beta24_app_import, name='beta24_app_import'),
 ]

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block page_title %}Import Beta24 App Data{% endblock %}
+{% block content %}
+<div class="card" style="max-width:900px;">
+  <div class="card-title" style="margin-bottom:10px;"><i class="fa-solid fa-mobile-screen" style="color:var(--y);margin-right:7px;"></i>Import Beta24 App Riders</div>
+  <div class="alert alert-w">
+    Paste data copied from Beta24 App. Format (tab-separated): <strong>App ID, Beta Code, Name, Gender, Mobile, State, City, Status, Registered Date</strong>
+  </div>
+  <form method="post">{% csrf_token %}
+    <div class="fg">
+      <label>Paste Data Here</label>
+      <textarea name="raw_data" rows="10" placeholder="101	BETA001	John Doe	Male	9876543210	Madhya Pradesh	Indore	Under Process	01-Jan-2025"></textarea>
+    </div>
+    <button type="submit" class="btn btn-y"><i class="fa-solid fa-upload"></i> Import Beta24 App Data</button>
+  </form>
+
+  {% if imported %}
+  <div style="margin-top:20px;">
+    <div class="alert alert-ok">{{ imported|length }} riders imported/updated successfully</div>
+    <div class="tbl-wrap">
+      <table><thead><tr><th>Name</th><th>Mobile</th><th>Beta Code</th><th>Action</th></tr></thead>
+      <tbody>{% for r in imported %}<tr><td>{{ r.name }}</td><td>{{ r.mobile }}</td><td style="color:var(--y);">{{ r.beta_code|default:"-" }}</td><td><span class="badge {% if r.action == 'Created' %}b-g{% else %}b-y{% endif %}">{{ r.action }}</span></td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if skipped %}
+  <div class="alert alert-w" style="margin-top:14px;">{{ skipped|length }} rows skipped</div>
+  <div class="tbl-wrap">
+    <table><thead><tr><th>Row</th><th>Reason</th><th>Raw Data</th></tr></thead>
+    <tbody>{% for s in skipped %}<tr><td>{{ s.row }}</td><td style="color:var(--err);">{{ s.reason }}</td><td style="color:var(--t2);font-size:11px;">{{ s.raw }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
