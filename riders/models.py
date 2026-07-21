@@ -80,17 +80,17 @@ class RiderTraining(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-    super().save(*args, **kwargs)
-    if self.status == 'completed':
-        # Training done → Documents Pending
-        if self.rider.status in ['new', 'training_pending']:
-            self.rider.status = 'documents_pending'
-            self.rider.save(update_fields=['status'])
-    elif self.status == 'rejected':
-        # Training rejected → Inactive
-        if self.rider.status not in ['active']:
-            self.rider.status = 'inactive'
-            self.rider.save(update_fields=['status'])
+        super().save(*args, **kwargs)
+        if self.status == 'completed':
+            # Training done → Documents Pending
+            if self.rider.status in ['new', 'training_pending']:
+                self.rider.status = 'documents_pending'
+                self.rider.save(update_fields=['status'])
+        elif self.status == 'rejected':
+            # Training rejected → Inactive
+            if self.rider.status not in ['active']:
+                self.rider.status = 'inactive'
+                self.rider.save(update_fields=['status'])
 
 
 class RiderDocument(models.Model):
