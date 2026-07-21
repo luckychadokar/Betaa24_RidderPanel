@@ -111,6 +111,27 @@ tr:hover td{background:rgba(255,255,255,.015);}
     <div class="sb-item">
       <a href="{% url 'rider_list' %}?status=documents_pending"><i class="fa-solid fa-file-circle-exclamation"></i> Documents Pending</a>
     </div>
+    <div class="sb-sec">Riders Flow</div>
+    <div class="sb-item">
+      <a href="{% url 'rider_list' %}?status=training_pending">
+        <i class="fa-solid fa-graduation-cap"></i> Training Pending
+      </a>
+    </div>
+    <div class="sb-item">
+      <a href="{% url 'training_records' %}">
+        <i class="fa-solid fa-clipboard-list"></i> Training Records
+      </a>
+    </div>
+    <div class="sb-item">
+      <a href="{% url 'rider_list' %}?status=documents_pending">
+        <i class="fa-solid fa-file-circle-exclamation"></i> Documents Pending
+      </a>
+    </div>
+    <div class="sb-item">
+      <a href="{% url 'rider_list' %}?status=active">
+        <i class="fa-solid fa-circle-check"></i> Active Riders
+      </a>
+    </div>
     <div class="sb-sec">Finance</div>
     <div class="sb-item {% if 'payout' in request.resolver_match.url_name|default:'' %}active{% endif %}">
       <a href="{% url 'payout_list' %}"><i class="fa-solid fa-money-bill-transfer"></i> Payouts</a>
